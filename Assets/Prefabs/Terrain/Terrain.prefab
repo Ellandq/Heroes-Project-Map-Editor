@@ -90,6 +90,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   raiseKey: 114
+  lowerKey: 116
   raiseHeight: 0.00025
+  lowerHeight: 0.00025
   raiseRadius: 5
   defaultHeight: 0
+  modifyRadius: 5

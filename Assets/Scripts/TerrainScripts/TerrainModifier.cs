@@ -3,7 +3,9 @@ using UnityEngine;
 public class TerrainModifier : MonoBehaviour
 {
     public KeyCode raiseKey = KeyCode.R;
+    public KeyCode lowerKey = KeyCode.T;
     public float raiseHeight = 3f;
+    public float lowerHeight = 3f;
     public float raiseRadius = 5f;
 
     public float defaultHeight = 0f;
@@ -22,9 +24,10 @@ public class TerrainModifier : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKey(raiseKey))
-        {
+        if (Input.GetKey(raiseKey)){
             RaiseTerrain();
+        }else if (Input.GetKey(lowerKey)){
+            LowerTerrain();
         }
         // Cast a ray from the camera to the terrain
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -33,7 +36,7 @@ public class TerrainModifier : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, layersToHit)){
             GameObject prevCircle = GameObject.Find("Circle");
-            DrawCircle(hit.point + new Vector3(0, raiseHeight, 0), modifyRadius, 30, Color.red, 0.1f, prevCircle);
+            DrawCircle(hit.point + new Vector3(0, raiseHeight, 0), (modifyRadius / 2), 32, Color.red, 0.1f, prevCircle);
         }
     }
 
@@ -52,26 +55,40 @@ public class TerrainModifier : MonoBehaviour
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, layersToHit))
         {
             // Get the position of the terrain at the ray hit point
-            Vector3 terrainPos = hit.point;
+            Vector3 terrainPos = hit.point - terrain.transform.position;
             terrainPos.y = terrain.SampleHeight(terrainPos);
 
             // Raise the terrain at the ray hit point
             float[,] heights = terrain.terrainData.GetHeights(0, 0, terrain.terrainData.heightmapResolution, terrain.terrainData.heightmapResolution);
             int centerX = Mathf.RoundToInt((terrainPos.x / terrain.terrainData.size.x) * (terrain.terrainData.heightmapResolution - 1));
             int centerZ = Mathf.RoundToInt((terrainPos.z / terrain.terrainData.size.z) * (terrain.terrainData.heightmapResolution - 1));
+            float[,] modifyHeights = new float[modifyRadius * 2 + 1, modifyRadius * 2 + 1];
 
-            for (int z = centerZ - modifyRadius; z <= centerZ + modifyRadius; z++)
+            for (int z = 0; z <= modifyRadius * 2; z++)
             {
-                for (int x = centerX - modifyRadius; x <= centerX + modifyRadius; x++)
+                for (int x = 0; x <= modifyRadius * 2; x++)
                 {
-                    if (z >= 0 && z < terrain.terrainData.heightmapResolution && x >= 0 && x < terrain.terrainData.heightmapResolution)
+                    int currentX = centerX + x - modifyRadius;
+                    int currentZ = centerZ + z - modifyRadius;
+                    if (currentX >= 0 && currentX < terrain.terrainData.heightmapResolution && currentZ >= 0 && currentZ < terrain.terrainData.heightmapResolution)
                     {
-                        float distance = Mathf.Sqrt((x - centerX) * (x - centerX) + (z - centerZ) * (z - centerZ));
-                        float normalizedDistance = distance / modifyRadius;
-                        float amountToRaise = raiseHeight * (1f - normalizedDistance);
+                        float distance = Vector2.Distance(new Vector2(centerX, centerZ), new Vector2(currentX, currentZ));
+                        float normalizedDistance = Mathf.Clamp01(1f - (distance / modifyRadius));
+                        modifyHeights[z, x] = normalizedDistance;
+                    }
+                }
+            }
 
-                        heights[z, x] += amountToRaise;
-                        heights[z, x] = Mathf.Clamp(heights[z, x], 0f, 1f);
+            for (int z = 0; z < modifyRadius * 2 + 1; z++)
+            {
+                for (int x = 0; x < modifyRadius * 2 + 1; x++)
+                {
+                    int currentX = centerX + x - modifyRadius;
+                    int currentZ = centerZ + z - modifyRadius;
+                    if (currentX >= 0 && currentX < terrain.terrainData.heightmapResolution && currentZ >= 0 && currentZ < terrain.terrainData.heightmapResolution)
+                    {
+                        heights[currentZ, currentX] += modifyHeights[z, x] * raiseHeight;
+                        heights[currentZ, currentX] = Mathf.Clamp(heights[currentZ, currentX], 0f, 1f);
                     }
                 }
             }
@@ -79,6 +96,65 @@ public class TerrainModifier : MonoBehaviour
             terrain.terrainData.SetHeights(0, 0, heights);
         }
     }
+
+    void LowerTerrain()
+    {
+        // Cast a ray from the camera to the terrain
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+        int layersToHit = LayerMask.GetMask("Terrain");
+
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity, layersToHit))
+        {
+            // Get the position of the terrain at the ray hit point
+            Vector3 terrainPos = hit.point - terrain.transform.position;
+            terrainPos.y = terrain.SampleHeight(terrainPos);
+
+            // Lower the terrain at the ray hit point
+            float[,] heights = terrain.terrainData.GetHeights(0, 0, terrain.terrainData.heightmapResolution, terrain.terrainData.heightmapResolution);
+            int centerX = Mathf.RoundToInt((terrainPos.x / terrain.terrainData.size.x) * (terrain.terrainData.heightmapResolution - 1));
+            int centerZ = Mathf.RoundToInt((terrainPos.z / terrain.terrainData.size.z) * (terrain.terrainData.heightmapResolution - 1));
+            float[,] modifyHeights = new float[modifyRadius * 2 + 1, modifyRadius * 2 + 1];
+
+            for (int z = 0; z <= modifyRadius * 2; z++)
+            {
+                for (int x = 0; x <= modifyRadius * 2; x++)
+                {
+                    int currentX = centerX + x - modifyRadius;
+                    int currentZ = centerZ + z - modifyRadius;
+                    if (currentX >= 0 && currentX < terrain.terrainData.heightmapResolution && currentZ >= 0 && currentZ < terrain.terrainData.heightmapResolution)
+                    {
+                        float distance = Vector2.Distance(new Vector2(centerX, centerZ), new Vector2(currentX, currentZ));
+                        float normalizedDistance = Mathf.Clamp01(1f - (distance / modifyRadius));
+                        modifyHeights[z, x] = -normalizedDistance;
+                    }
+                }
+            }
+
+            for (int z = 0; z < modifyRadius * 2 + 1; z++)
+            {
+                for (int x = 0; x < modifyRadius * 2 + 1; x++)
+                {
+                    int currentX = centerX + x - modifyRadius;
+                    int currentZ = centerZ + z - modifyRadius;
+                    if (currentX >= 0 && currentX < terrain.terrainData.heightmapResolution && currentZ >= 0 && currentZ < terrain.terrainData.heightmapResolution)
+                    {
+                        heights[currentZ, currentX] += modifyHeights[z, x] * lowerHeight;
+                        heights[currentZ, currentX] = Mathf.Clamp(heights[currentZ, currentX], 0f, 1f);
+                    }
+                }
+            }
+
+            terrain.terrainData.SetHeights(0, 0, heights);
+        }
+    }
+
+
+
+
+
+
+
 
     public void ResetTerrain()
     {
