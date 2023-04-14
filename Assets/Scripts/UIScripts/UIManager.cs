@@ -11,10 +11,13 @@ public class UIManager : MonoBehaviour
     [Header ("UI Areas")]
     [SerializeField] private GameObject topAreaUI;
     [SerializeField] private GameObject leftAreaUI;
+    [SerializeField] private BrushDisplay brushDisplay;
     [SerializeField] private GameObject rightAreaUI;
-    [SerializeField] private GameObject bottomAreaUI;
     [SerializeField] private GameObject middleAreaUI;
+    [SerializeField] private GameObject popupUI;
 
+    [Header ("UI Options")]
+    [SerializeField] private BrushMode currentBrushMode;
 
     private void Awake ()
     {
@@ -33,14 +36,14 @@ public class UIManager : MonoBehaviour
         topAreaUI.SetActive(false);
     }
 
-    public void EnableBottomUI ()
+    public void EnablePopupUI ()
     {
-        bottomAreaUI.SetActive(true);
+        popupUI.SetActive(true);
     }
 
-    public void DisableBottomUI ()
+    public void DisablePopupUI ()
     {
-        bottomAreaUI.SetActive(false);
+        popupUI.SetActive(false);
     }
 
     public void EnableLeftUI ()
@@ -65,9 +68,17 @@ public class UIManager : MonoBehaviour
 
     #endregion
 
-    #region Top UI 
+    #region TopUI 
 
     
+
+    #endregion
+
+    #region LeftUI
+
+    public void ChangeTool(int value){
+        brushDisplay.ActivateTool((BrushMode)value);
+    }
 
     #endregion
 }

@@ -116,7 +116,7 @@ public class ObjectSelector : MonoBehaviour
     {
         if (selectedObject != null){
             if (selectedObjectTag == "GridCell"){
-                selectedGridPosition = selectedObject.GetComponent<GridCell>().gridPosition;
+                selectedGridPosition = selectedObject.GetComponent<GridCell>().GetPosition();
                 objectCreationUI.UpdateElement();
 
             }

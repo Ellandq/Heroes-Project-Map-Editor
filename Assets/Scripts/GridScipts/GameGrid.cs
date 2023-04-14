@@ -41,8 +41,8 @@ public class GameGrid : MonoBehaviour
                 for (int x = 0; x < gridWidth; x++)
                 {
                     // Create a new GridSpace object for each cell
-                    gameGrid[x, z] = Instantiate(gridCellPrefab, new Vector3(x * gridSpaceSize, 0, z * gridSpaceSize), Quaternion.identity);
-                    gameGrid[x, z].GetComponent<GridCell>().SetPosition(x, z);
+                    gameGrid[x, z] = Instantiate(gridCellPrefab, new Vector3(x * gridSpaceSize, 0.1f, z * gridSpaceSize), Quaternion.identity);
+                    gameGrid[x, z].GetComponent<GridCell>().SetPosition(x, z, 1);
                     gameGrid[x, z].transform.parent = transform;
                     gameGrid[x, z].gameObject.name = "Grid Space ( X: " + x.ToString() + " , Z: " + z.ToString() + ")";
                 }
@@ -151,5 +151,65 @@ public class GameGrid : MonoBehaviour
             }
         }
         return neighbourList;
+    }
+
+    public List<GridCell> GetGridCellList(Vector2Int gridPosition, int size)
+    {
+        List<GridCell> gridCells = new List<GridCell>();
+        int offset = (size - 1) / 2;
+        for (int i = -offset; i <= offset; i++)
+        {
+            for (int j = -offset; j <= offset; j++)
+            {
+                Vector2Int currentPosition = gridPosition + new Vector2Int(i, j);
+                if (currentPosition.x >= 0 && currentPosition.y >= 0 && currentPosition.x < gameGrid.GetLength(0) && currentPosition.y < gameGrid.GetLength(1)){
+                    gridCells.Add(GetGridCellInformation(currentPosition));
+                }
+            }
+        }
+
+        return gridCells;
+    }
+
+    // public List<GridCell> GetNeighbourCells (Vector2Int gridPosition){
+
+    // }
+
+    // public List<GridCell> GetNeighbourCells (Vector2Int gridPosition, int height){
+
+    // }
+
+    public bool AreNeighboursHigherLevel (Vector2Int gridPosition, float height){
+        List<GridCell> gridCells = new List<GridCell>();
+        int offset = 1;
+        for (int i = -offset; i <= offset; i++)
+        {
+            for (int j = -offset; j <= offset; j++)
+            {
+                Vector2Int currentPosition = gridPosition + new Vector2Int(i, j);
+                if (currentPosition.x >= 0 && currentPosition.y >= 0 && currentPosition.x < gameGrid.GetLength(0) && currentPosition.y < gameGrid.GetLength(1)){
+                    if (GetGridCellInformation(currentPosition).GetHeightLevel() < height) return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public bool AreNeighboursLowerLevel (Vector2Int gridPosition, float height){
+        List<GridCell> gridCells = new List<GridCell>();
+        int offset = 1;
+        for (int i = -offset; i <= offset; i++)
+        {
+            for (int j = -offset; j <= offset; j++)
+            {
+                Vector2Int currentPosition = gridPosition + new Vector2Int(i, j);
+                if (currentPosition.x >= 0 && currentPosition.y >= 0 && currentPosition.x < gameGrid.GetLength(0) && currentPosition.y < gameGrid.GetLength(1)){
+                    if (GetGridCellInformation(currentPosition).GetHeightLevel() > height) return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

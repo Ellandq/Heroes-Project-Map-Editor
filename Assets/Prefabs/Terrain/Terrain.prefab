@@ -94,5 +94,5 @@ MonoBehaviour:
   raiseHeight: 0.00025
   lowerHeight: 0.00025
   raiseRadius: 5
-  defaultHeight: 0
+  defaultHeight: 5
   modifyRadius: 5
