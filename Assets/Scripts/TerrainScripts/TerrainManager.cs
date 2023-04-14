@@ -46,13 +46,14 @@ public class TerrainManager : MonoBehaviour
         if ((gridPositions[0].x == gridPositions[1].x && gridPositions[0].x == gridPositions[2].x) || (gridPositions[0].y == gridPositions[1].y && gridPositions[0].y == gridPositions[2].y)){
             //Check what grid cell is lower by one level (if any)
             if (GameGrid.Instance.GetGridCellInformation(gridPositions[0]).GetHeightLevel() + 1 == GameGrid.Instance.GetGridCellInformation(gridPositions[2]).GetHeightLevel()){
+                // Check whether the higher gridCell is already a slope
                 if (GameGrid.Instance.GetGridCellInformation(gridPositions[2]).GetHeightLevel() != Mathf.Floor(GameGrid.Instance.GetGridCellInformation(gridPositions[2]).GetHeightLevel())) return;
                 terrainModifier.CreateSlope(gridPositions[1], GameGrid.Instance.GetGridCellInformation(gridPositions[2]).GetHeightLevel() - 0.5f, GetSlopeType(gridPositions[2], gridPositions[0]));
                 GameGrid.Instance.GetGridCellInformation(gridPositions[1]).ChangeCellLevel(GameGrid.Instance.GetGridCellInformation(gridPositions[2]).GetHeightLevel() - 0.5f);
             }else if (GameGrid.Instance.GetGridCellInformation(gridPositions[0]).GetHeightLevel() == GameGrid.Instance.GetGridCellInformation(gridPositions[2]).GetHeightLevel() + 1){
                 if (GameGrid.Instance.GetGridCellInformation(gridPositions[0]).GetHeightLevel() != Mathf.Floor(GameGrid.Instance.GetGridCellInformation(gridPositions[0]).GetHeightLevel())) return;
-                terrainModifier.CreateSlope(gridPositions[1], GameGrid.Instance.GetGridCellInformation(gridPositions[1]).GetHeightLevel() - 0.5f, GetSlopeType(gridPositions[0], gridPositions[2]));
-                GameGrid.Instance.GetGridCellInformation(gridPositions[1]).ChangeCellLevel(GameGrid.Instance.GetGridCellInformation(gridPositions[1]).GetHeightLevel() - 0.5f);
+                terrainModifier.CreateSlope(gridPositions[1], GameGrid.Instance.GetGridCellInformation(gridPositions[0]).GetHeightLevel() - 0.5f, GetSlopeType(gridPositions[0], gridPositions[2]));
+                GameGrid.Instance.GetGridCellInformation(gridPositions[1]).ChangeCellLevel(GameGrid.Instance.GetGridCellInformation(gridPositions[0]).GetHeightLevel() - 0.5f);
             }
         }
     }
