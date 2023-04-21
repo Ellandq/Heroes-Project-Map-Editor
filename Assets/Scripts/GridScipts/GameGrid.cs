@@ -5,9 +5,8 @@ using UnityEngine;
 public class GameGrid : MonoBehaviour
 {
     public static GameGrid Instance;
-    public int gridLength;
-    public int gridWidth;
     public float gridSpaceSize = 5f;
+    private int gridSize;
 
     [SerializeField] private GameObject gridCellPrefab;
     public GameObject[,] gameGrid;
@@ -20,15 +19,12 @@ public class GameGrid : MonoBehaviour
     }
 
     // Creates the grid when the game starts
-    public void CreateGrid(Vector2Int gridSize)
+    public void CreateGrid(int _gridSize)
     {
         if (!gridCreated){
-            gridSize.y = gridSize.y;
-
+            gridSize = _gridSize;
             gridCreated = true;
-            gridLength = gridSize.x;
-            gridWidth = gridSize.y;
-            gameGrid = new GameObject[gridLength, gridWidth];
+            gameGrid = new GameObject[gridSize, gridSize];
 
             if (gridCellPrefab == null )
             {
@@ -36,9 +32,9 @@ public class GameGrid : MonoBehaviour
             }
 
             // Create the grid
-            for (int z = 0; z < gridLength; z++)
+            for (int z = 0; z < gridSize; z++)
             {
-                for (int x = 0; x < gridWidth; x++)
+                for (int x = 0; x < gridSize; x++)
                 {
                     // Create a new GridSpace object for each cell
                     gameGrid[x, z] = Instantiate(gridCellPrefab, new Vector3(x * gridSpaceSize, 0.1f, z * gridSpaceSize), Quaternion.identity);
@@ -59,8 +55,8 @@ public class GameGrid : MonoBehaviour
         int x = Mathf.FloorToInt(worldPosition.x / gridSpaceSize);
         int z = Mathf.FloorToInt(worldPosition.z / gridSpaceSize);
 
-        x = Mathf.Clamp(x, 0, gridWidth);
-        z = Mathf.Clamp(z, 0, gridLength);
+        x = Mathf.Clamp(x, 0, gridSize);
+        z = Mathf.Clamp(z, 0, gridSize);
 
         return new Vector2Int(x, z);
     }
@@ -83,13 +79,13 @@ public class GameGrid : MonoBehaviour
     // Returns the length of the grid
     public int GetGridLength ()
     {
-        return gridLength;
+        return gridSize;
     }
     
     // Returns the width of the grid
     public int GetGridWidth ()
     {
-        return gridWidth;
+        return gridSize;
     }
     
     // Returns the nearest empty GridCell
@@ -109,13 +105,13 @@ public class GameGrid : MonoBehaviour
                 }
             }
             // Left Up
-            if (gridPosition.y + 1 < GetGridLength()) {
+            if (gridPosition.y + 1 < gridSize) {
                 if (!GetGridCellInformation(new Vector2Int(gridPosition.x - 1, gridPosition.y + 1)).isOccupied){
                     neighbourList.Add(GetGridCellInformation(new Vector2Int(gridPosition.x - 1, gridPosition.y + 1)));
                 }
             }
         }
-        if (gridPosition.x + 1 < GetGridWidth()){
+        if (gridPosition.x + 1 < gridSize){
             // Right
             if (gridPosition.y - 1 >= 0) {
                 if (!GetGridCellInformation(new Vector2Int(gridPosition.x + 1, gridPosition.y)).isOccupied){ 
@@ -129,7 +125,7 @@ public class GameGrid : MonoBehaviour
                 }
             }
             // Right Up
-                if (gridPosition.y + 1 < GetGridLength()) {
+                if (gridPosition.y + 1 < gridSize) {
                     if (!GetGridCellInformation(new Vector2Int(gridPosition.x + 1, gridPosition.y + 1)).isOccupied){
                     neighbourList.Add(GetGridCellInformation(new Vector2Int(gridPosition.x + 1, gridPosition.y + 1)));
                 }
@@ -144,7 +140,7 @@ public class GameGrid : MonoBehaviour
             }
             
             // Up
-            if (gridPosition.y + 1 < GetGridLength()) {
+            if (gridPosition.y + 1 < gridSize) {
                 if (!GetGridCellInformation(new Vector2Int(gridPosition.x, gridPosition.y + 1)).isOccupied){
                     neighbourList.Add(GetGridCellInformation(new Vector2Int(gridPosition.x, gridPosition.y + 1)));
                 }

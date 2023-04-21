@@ -19,7 +19,7 @@ public class CameraManager : MonoBehaviour
 
     internal bool cameraEnabled = false;
 
-    void Start ()
+    private void Start ()
     {
         Instance = this;
     }

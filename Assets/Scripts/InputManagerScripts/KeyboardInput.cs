@@ -7,56 +7,55 @@ public class KeyboardInput : MonoBehaviour
 {
     [SerializeField] InputManager inputManager;
 
-    internal bool isUpPressed;
-    internal bool isDownPressed;
-    internal bool isLeftPressed;
-    internal bool isRightPressed;
-    internal bool resetCameraPressed;
-    internal bool isLeftShiftPressed;
+    [Header ("Events")]
+    public Action onUpPressed;
+    public Action onDownPressed;
+    public Action onLeftPressed;
+    public Action onRightPressed;
+    public Action onResetPressed;
+    public Action onLeftShiftChangedState;
+
+    [Header ("Button states")]
+    private bool isLeftShiftPressed;
+
+    // internal bool isUpPressed;
+    // internal bool isDownPressed;
+    // internal bool isLeftPressed;
+    // internal bool isRightPressed;
+    // internal bool resetCameraPressed;
     //internal bool isTabKeyPressed;
     //internal bool isSpaceKeyPressed
 
     private void Update ()
     {
         if(Input.GetKey(KeyCode.A)){
-            isLeftPressed = true;
-        }
-        else{
-            isLeftPressed = false;
+            onLeftPressed?.Invoke();
         }
 
         if(Input.GetKey(KeyCode.D)){
-            isRightPressed = true;
-        }
-        else{
-            isRightPressed = false;
+            onRightPressed?.Invoke();
         }
 
         if(Input.GetKey(KeyCode.W)){
-            isUpPressed = true;
-        }
-        else{
-            isUpPressed = false;
+            onUpPressed?.Invoke();
         }
 
         if(Input.GetKey(KeyCode.S)){
-            isDownPressed = true;
-        }
-        else{
-            isDownPressed = false;
+            onDownPressed?.Invoke();
         }
 
         if(Input.GetKey(KeyCode.R)){
-            resetCameraPressed = true;
-        }
-        else{
-            resetCameraPressed = false;
+            onResetPressed?.Invoke();
         }
 
         if(Input.GetKey(KeyCode.LeftShift)){
-            isLeftShiftPressed = true;
-        }else{
+            if (!isLeftShiftPressed){
+                onLeftShiftChangedState?.Invoke();
+                isLeftShiftPressed = true;
+            }
+        }else if (isLeftShiftPressed){
             isLeftShiftPressed = false;
+            onLeftShiftChangedState?.Invoke();
         }
     }
 }

@@ -12,94 +12,23 @@ public class PlayerManager : MonoBehaviour
     public UnityEvent onPlayerCountChange;
 
     [Header("Player information")]
-    [SerializeField] private GameObject playerPrefab;
-    [SerializeField] public GameObject neutralPlayer;
-    public List<GameObject> players;
-
-    [SerializeField] public List<PlayerTag> availablePlayers;
-    [SerializeField] public List<PlayerTag> existingPlayers;
+    [SerializeField] public Player neutralPlayer;
+    [SerializeField] public List<Player> players;
 
     [Header("Player colors")]
-    [SerializeField] private Color blue;
-    [SerializeField] private Color lightBlue;
-    [SerializeField] private Color purple;
-    [SerializeField] private Color red;
-    [SerializeField] private Color orange;
-    [SerializeField] private Color yellow;
-    [SerializeField] private Color lightGreen;
-    [SerializeField] private Color green;
+    [SerializeField] private List<Color> playerColors;
 
     public void Awake ()
     {
         Instance = this;
     }
 
-    // Creates a new player
-    public void CreatePlayer(int index)
-    {
-        players.Add(Instantiate(playerPrefab, new Vector3(0, 0, 0), Quaternion.identity));
-        players[players.Count - 1].GetComponent<Player>();
-        players[players.Count - 1].transform.parent = transform;
-        players[players.Count - 1].gameObject.name = Enum.GetName(typeof(PlayerTag), availablePlayers[index]) + " " + defaultPlayerName;
-        players[players.Count - 1].GetComponent<Player>().playerColor = AssignPlayerColour(Enum.GetName(typeof(PlayerTag), availablePlayers[index]));
-        players[players.Count - 1].GetComponent<Player>().playerTag = availablePlayers[index];
-        existingPlayers.Add(availablePlayers[index]);
-        availablePlayers.RemoveAt(index);
-        PlayerUI.Instance.UpdatePlayerMenu();
-        onPlayerCountChange?.Invoke();
+    public Player GetPlayer (PlayerTag playerTag){
+        return players[(int)playerTag];
     }
 
-    public void RemovePlayer(int index)
-    {
-        availablePlayers.Add(existingPlayers[index]);
-        existingPlayers.RemoveAt(index);
-        Destroy(players[index].gameObject);
-        players.RemoveAt(index);
-        PlayerUI.Instance.UpdatePlayerMenu();
-        onPlayerCountChange?.Invoke();
-    }
-
-    // Sets the player color 
-    private Color AssignPlayerColour (string playerColour)
-    {
-        switch (playerColour){
-            case "Blue":
-                return blue;
-
-            case "LightBlue":
-                return lightBlue;
-
-            case "Purple":
-                return purple;
-
-            case "Red":
-                return red;
-
-            case "Orange":
-                return orange;
-
-            case "Yellow":
-                return yellow;
-
-            case "LightGreen":
-                return lightGreen;
-
-            case "Green":
-                return green;
-            default: 
-                return blue;
-        }
-    }
-
-    public int GetCurrentPlayerIndex (PlayerTag playerTag)
-    {
-        for (int i = 0; i < existingPlayers.Count; i++)
-        {
-            if (existingPlayers[i] == playerTag){
-                return i + 1;
-            }
-        }
-        return 0;
+    public Color GetPlayerColor (PlayerTag playerTag){
+        return playerColors[(int)playerTag];
     }
 }
 

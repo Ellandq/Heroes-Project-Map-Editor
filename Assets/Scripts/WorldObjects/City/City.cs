@@ -4,123 +4,74 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public class City : MonoBehaviour
+public class City : WorldObject
 {
-    [SerializeField] GameObject flag;
-
-    public ObjectType objectType = ObjectType.City;
-
     [Header("Main city information")]
-    [SerializeField] public GameObject ownedByPlayer;
     public CityFraction cityFraction;
-    public Vector2Int gridPosition;
-    private Vector3 position;
-    public Vector3 rotation;
-    public PlayerTag playerTag;
 
     [Header("Garrison refrences")]
-    [SerializeField] public List <int> garrisonSlotsID;
-    [SerializeField] public List <int> garrisonSlotsCount;
+    [SerializeField] private List<UnitSlot> unitSlots;
 
     [Header ("City Buildings")]
-    public List<Int16> cityBuildings;
+    [SerializeField] public List<CityBuildingStatus> cityBuildings;
 
-    public void CityInitialization (Vector2Int _gridPosition)
+    public City (Vector2Int gridPosition, Vector3 rotation, CityFraction cityFraction, PlayerTag ownedByPlayer = PlayerTag.None, ObjectType objectType = ObjectType.City)
+        : base(gridPosition, rotation, objectType, ownedByPlayer)
     {
-        playerTag = PlayerTag.None;
-        gridPosition = _gridPosition;
-        transform.localEulerAngles = rotation;
-        ownedByPlayer = PlayerManager.Instance.neutralPlayer;
+        ChangeOwningPlayer(ownedByPlayer);
+        ChangeCityFraction(cityFraction);
 
-        for (int i = 0; i < 30; i++){
-            cityBuildings.Add(0);
-        }
+        // Unit Slots initialization
+        unitSlots = new List<UnitSlot>(7);
+        for (int i = 0; i < unitSlots.Count; i++) unitSlots[i].SetSlotStatus(0, 0);
 
-        for (int i = 0; i < 7; i++){
-            garrisonSlotsID.Add(0);
-            garrisonSlotsCount.Add(0);
-        }
-        
-        cityBuildings[0] = 1;
-        cityBuildings[4] = 1;
-
-        
+        // City buildings initialization
+        for (int i = 0; i < 30; i++) cityBuildings.Add(0);
+        cityBuildings[0] = CityBuildingStatus.Built;
+        cityBuildings[4] = CityBuildingStatus.Built;
     }
 
-    public void AddOwningPlayer(GameObject _ownedByPlayer)
-    {
-        ownedByPlayer = _ownedByPlayer;
-        if (_ownedByPlayer.name != "Neutral Player"){
+    public override void ChangeOwningPlayer (PlayerTag ownedByPlayer = PlayerTag.None){ 
+        PlayerManager.Instance.GetPlayer(ownedByPlayer).RemoveCity(this);
+        base.ChangeOwningPlayer(ownedByPlayer);
+        PlayerManager.Instance.GetPlayer(ownedByPlayer).AddCity(this);
+        if (ownedByPlayer != PlayerTag.None){
             flag.SetActive(true);
-            flag.GetComponent<MeshRenderer>().material.color = _ownedByPlayer.GetComponent<Player>().playerColor;
-        }
-        playerTag = ownedByPlayer.GetComponent<Player>().playerTag;
-    }
-
-    private void ChangeOwningPlayer (GameObject _ownedByPlayer)
-    {
-        ownedByPlayer.GetComponent<Player>().ownedCities.Remove(this.gameObject);
-        if (ownedByPlayer.name == "Neutral Player"){
-            ownedByPlayer = _ownedByPlayer;
-            flag.SetActive(true);
-            flag.GetComponent<MeshRenderer>().material.color = _ownedByPlayer.GetComponent<Player>().playerColor;
+            flag.GetComponent<MeshRenderer>().material.color = PlayerManager.Instance.GetPlayerColor(ownedByPlayer);  // Get color from player
         }else{
-            ownedByPlayer = _ownedByPlayer;
-            flag.GetComponent<MeshRenderer>().material.color = _ownedByPlayer.GetComponent<Player>().playerColor;
+            flag.SetActive(false);
         }
-        ownedByPlayer.GetComponent<Player>().ownedCities.Add(this.gameObject);
-        playerTag = ownedByPlayer.GetComponent<Player>().playerTag;
     }
 
-    public void ChangeCityRotation (int _rotation)
-    {
-        transform.localEulerAngles = new Vector3 (0, _rotation, 0);
-        rotation = transform.localEulerAngles;
+    public void SetUnitSlotStatus (int unitID, int unitCount, int unitSlotIndex){
+        unitSlots[unitSlotIndex].SetSlotStatus(unitID, unitCount);
     }
 
-    public void RemoveOwningPlayer ()
-    {
-        ownedByPlayer = PlayerManager.Instance.neutralPlayer;
-        flag.SetActive(false);
-        playerTag = PlayerTag.None;
-    }
-
-    public float GetCityRotation ()
-    {
-        return rotation.y;
-    }
-
-    public void AddUnits (int unitID, int unitCount, int garrisonIndex){
-        
-    }
-
-    public void ChangeBuildingStatus (BuildingID id, short status)
-    {
+    public void ChangeBuildingStatus (BuildingID id, CityBuildingStatus status){
         cityBuildings[(int)id] = status;
     }
 
-    public void ChangeCityFraction (CityFraction _fraction)
-    {
+    public void ChangeCityFraction (CityFraction _fraction){
         cityFraction = _fraction;
     }
 
-    public List<int> GetConvertedCityInformation ()
+    public override List<int> GetConvertedObjectInformation ()
     {
         List<int> cityInfo = new List<int>();
 
-        cityInfo.Add((int)ownedByPlayer.GetComponent<Player>().playerTag);
-        cityInfo.Add(gridPosition.x);
-        cityInfo.Add(gridPosition.y);
-        cityInfo.Add(Convert.ToInt32(rotation.y));
+        cityInfo.Add((int)GetPlayerTag());
+        cityInfo.Add(GetGridPosition().x);
+        cityInfo.Add(GetGridPosition().y);
+        cityInfo.Add(Convert.ToInt32(GetRotation()));
         cityInfo.Add((int)cityFraction);
         
         for (int i = 0; i < cityBuildings.Count; i++){
-            cityInfo.Add(cityBuildings[i]);
+            cityInfo.Add((int)cityBuildings[i]);
         }
 
         for (int i = 0; i < 7; i++){
-            cityInfo.Add(garrisonSlotsID[i]);
-            cityInfo.Add(garrisonSlotsCount[i]);
+            cityInfo.Add(unitSlots[i].GetSlotUnitID());
+            cityInfo.Add(unitSlots[i].GetSlotUnitCount());
         }
 
         return cityInfo;

@@ -10,16 +10,24 @@ public class TerrainShaperTool : MonoBehaviour
     [Header ("Brush Information")]
     [SerializeField] private int brushSize;
     [SerializeField] private float currentHeightLevel;
+    [SerializeField] private bool heightLevelAdjusted;
+    [SerializeField] private bool allowTallClifs;
 
     [Header ("UI References")]
     [SerializeField] private Slider brushSizeSlider;
     [SerializeField] private TMP_Text brushSizeDisplay;
+    [SerializeField] private Button allowTallClifs_Button;
+
+    [Header ("Button Sprites")]
+    [SerializeField] private Sprite buttonSprite_enabled;
+    [SerializeField] private Sprite buttonSprite_disabled;
 
     public void ActivateTerrainShaperTool(){
         BrushHandler.Instance.onLeftMouseButtonPressed.AddListener(HeightenTerrainLevel);
         BrushHandler.Instance.onRightMouseButtonPressed.AddListener(LowerTerrainLevel);
-        BrushHandler.Instance.onNoButtonPressesDetected.AddListener(UpdateCurrentAdjustedHeightLevel);
+        BrushHandler.Instance.onNoButtonPressesDetected.AddListener(ResetHeightLevel);
         BrushHandler.Instance.onNoButtonPressesDetected.AddListener(TerrainManager.Instance.ResetSelectedGridCellList);
+        UpdateBrushSize();
     }
 
     public void UpdateBrushSize (float size){
@@ -33,20 +41,22 @@ public class TerrainShaperTool : MonoBehaviour
     }
 
     private void HeightenTerrainLevel (){
+        if (!heightLevelAdjusted) UpdateCurrentAdjustedHeightLevel();
         if (currentHeightLevel < 4.5f){
             foreach (GridCell cell in BrushHandler.Instance.GetCurrentSelectedGridCells()){
                 if (cell.GetHeightLevel() == currentHeightLevel){
-                    TerrainManager.Instance.RaiseGridTerrainLevel(cell.GetPosition(), Mathf.FloorToInt(currentHeightLevel) + 1);
+                    TerrainManager.Instance.RaiseGridTerrainLevel(cell.GetPosition(), Mathf.FloorToInt(currentHeightLevel) + 1, allowTallClifs);
                 }
             }
         } 
     }
 
     private void LowerTerrainLevel (){
+        if (!heightLevelAdjusted) UpdateCurrentAdjustedHeightLevel();
         if (currentHeightLevel > 1.5f){
             foreach (GridCell cell in BrushHandler.Instance.GetCurrentSelectedGridCells()){
                 if (cell.GetHeightLevel() == currentHeightLevel){
-                    TerrainManager.Instance.LowerGridTerrainLevel(cell.GetPosition(), Mathf.FloorToInt(currentHeightLevel) - 1);
+                    TerrainManager.Instance.LowerGridTerrainLevel(cell.GetPosition(), Mathf.FloorToInt(currentHeightLevel) - 1, allowTallClifs);
                 }
             }
         } 
@@ -54,5 +64,21 @@ public class TerrainShaperTool : MonoBehaviour
 
     private void UpdateCurrentAdjustedHeightLevel(){
         currentHeightLevel = GameGrid.Instance.GetGridCellInformation(BrushHandler.Instance.GetCurrentSelectedPosition()).GetHeightLevel();
+        heightLevelAdjusted = true;
+    }
+
+    private void ResetHeightLevel (){
+        heightLevelAdjusted = false;
+    }
+
+    public void AllowTallClifs (){
+        if (allowTallClifs){
+            allowTallClifs = false;
+            allowTallClifs_Button.image.sprite = buttonSprite_disabled;
+        }
+        else {
+            allowTallClifs = true;
+            allowTallClifs_Button.image.sprite = buttonSprite_enabled;
+        }
     }
 }

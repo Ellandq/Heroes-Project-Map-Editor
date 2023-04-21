@@ -26,20 +26,20 @@ public class MouseInput : MonoBehaviour
     // Checks what mouse buttons are pressed
     private void GetMouseInput ()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButton(0))
         {
             mouseButtonPressed_0 = true;
         }else{
             mouseButtonPressed_0 = false;
         }
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButton(1))
         {
             mouseButtonPressed_1 = true;
             ObjectSelector.Instance.ObjectInteraction();
         }else{
             mouseButtonPressed_1 = false;
         }
-        if (Input.GetMouseButtonDown(2))
+        if (Input.GetMouseButton(2))
         {
             mouseButtonPressed_2 = true;
         }else{

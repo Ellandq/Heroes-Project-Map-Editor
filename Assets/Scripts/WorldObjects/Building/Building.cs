@@ -2,17 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Building : MonoBehaviour
+public class Building : WorldObject
 {
-    // Start is called before the first frame update
-    void Start()
+    public Building (Vector2Int gridPosition, Vector3 rotation, PlayerTag ownedByPlayer = PlayerTag.None, ObjectType objectType = ObjectType.Building)
+        : base(gridPosition, rotation, objectType, ownedByPlayer)
     {
-        
+        // Initialization
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    
 }

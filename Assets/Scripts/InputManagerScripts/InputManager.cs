@@ -12,7 +12,7 @@ public class InputManager : MonoBehaviour
     // Store a referance to all sub input scripts
 
     [SerializeField]
-    internal GridInteractionManager gridInteractionManager;
+    internal WorldObjectInteractionManager gridInteractionManager;
 
     [SerializeField]
     internal MouseInput mouseInput;

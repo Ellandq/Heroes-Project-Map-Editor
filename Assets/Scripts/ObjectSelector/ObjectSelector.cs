@@ -53,62 +53,62 @@ public class ObjectSelector : MonoBehaviour
         if (InputManager.Instance.mouseInput.mouseButtonPressed_0)
         {
             // Uses different logic depending on the selected object 
-            switch (selectedObjectTag)
-            {
-                case "Army":
-                    ArmySelectionLogic();
-                break;
+            // switch (selectedObjectTag)
+            // {
+            //     case "Army":
+            //         ArmySelectionLogic();
+            //     break;
 
-                case "City":
-                    CitySelectionLogic();
+            //     case "City":
+            //         CitySelectionLogic();
                     
-                break;
+            //     break;
 
-                case "CityEnterance":
-                    CityEnteranceSelectionLogic();
-                break;
+            //     case "CityEnterance":
+            //         CityEnteranceSelectionLogic();
+            //     break;
 
-                case "Mine":
-                    MineSelectionLogic();
-                break;
+            //     case "Mine":
+            //         MineSelectionLogic();
+            //     break;
 
-                case "MineEnterance":
-                    MineEnteranceSelectionLogic();
-                break;
+            //     case "MineEnterance":
+            //         MineEnteranceSelectionLogic();
+            //     break;
 
-                case "Building":
-                    BuildingSelectionLogic();
-                break;
+            //     case "Building":
+            //         BuildingSelectionLogic();
+            //     break;
 
-                case "BuildingEnterance":
-                    BuildingEnteranceSelectionLogic();
-                break;
+            //     case "BuildingEnterance":
+            //         BuildingEnteranceSelectionLogic();
+            //     break;
 
-                case "Dwelling":
-                    DwellingSelectionLogic();
-                break;
+            //     case "Dwelling":
+            //         DwellingSelectionLogic();
+            //     break;
 
-                case "DwellingEnterance":
-                    DwellingEnteranceSelectionLogic();
-                break;
+            //     case "DwellingEnterance":
+            //         DwellingEnteranceSelectionLogic();
+            //     break;
 
-                case "Resource":
-                    ResourceSelectionLogic();
-                break;
+            //     case "Resource":
+            //         ResourceSelectionLogic();
+            //     break;
 
-                case "Artifact":
-                    ArtifactSelectionLogic();
-                break;
+            //     case "Artifact":
+            //         ArtifactSelectionLogic();
+            //     break;
 
-                case "GridCell":
-                    GridCellSelectionLogic();
-                break;
+            //     case "GridCell":
+            //         GridCellSelectionLogic();
+            //     break;
 
-                default:
-                    selectedObject = null;
-                    selectedObjectTag = null;
-                break;
-            }
+            //     default:
+            //         selectedObject = null;
+            //         selectedObjectTag = null;
+            //     break;
+            // }
         }  
     }
 
@@ -138,63 +138,63 @@ public class ObjectSelector : MonoBehaviour
         onSelectedObjectChange.Invoke();
     }
 
-    private void ArmySelectionLogic()
-    {
-        ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
-    }
+    // private void ArmySelectionLogic()
+    // {
+    //     ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
+    // }
 
-    private void CitySelectionLogic()
-    {
-        ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
-    }
+    // private void CitySelectionLogic()
+    // {
+    //     ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
+    // }
 
-    private void CityEnteranceSelectionLogic()
-    {
-        ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
-    }
+    // private void CityEnteranceSelectionLogic()
+    // {
+    //     ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
+    // }
 
-    private void MineSelectionLogic()
-    {
-        ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
-    }
+    // private void MineSelectionLogic()
+    // {
+    //     ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
+    // }
 
-    private void MineEnteranceSelectionLogic()
-    {
-        ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
-    }
+    // private void MineEnteranceSelectionLogic()
+    // {
+    //     ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
+    // }
 
-    private void BuildingSelectionLogic()
-    {
-        ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
-    }
+    // private void BuildingSelectionLogic()
+    // {
+    //     ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
+    // }
 
-    private void BuildingEnteranceSelectionLogic()
-    {
-        ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
-    }
+    // private void BuildingEnteranceSelectionLogic()
+    // {
+    //     ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
+    // }
 
-    private void DwellingSelectionLogic()
-    {
-        ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
-    }
+    // private void DwellingSelectionLogic()
+    // {
+    //     ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
+    // }
 
-    private void DwellingEnteranceSelectionLogic()
-    {
-        ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
-    }
+    // private void DwellingEnteranceSelectionLogic()
+    // {
+    //     ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
+    // }
 
-    private void ResourceSelectionLogic()
-    {
-        ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
-    }
+    // private void ResourceSelectionLogic()
+    // {
+    //     ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
+    // }
 
-    private void ArtifactSelectionLogic()
-    {
-        ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
-    }
+    // private void ArtifactSelectionLogic()
+    // {
+    //     ObjectInformationDisplay.Instance.ChangeSelectedObject(selectedObject.transform.parent.gameObject);
+    // }
 
-    private void GridCellSelectionLogic()
-    {
+    // private void GridCellSelectionLogic()
+    // {
         
-    }
+    // }
 }

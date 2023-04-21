@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class CameraZoom : MonoBehaviour
 {
-    [SerializeField] GameObject inputManager;
     private MouseInput mouseInput;
     private KeyboardInput keyboardInput;
     
@@ -15,6 +14,7 @@ public class CameraZoom : MonoBehaviour
 
     [Header("Height Options")]
     [SerializeField] private float maxCameraHeight = 70f;
+    [SerializeField] private float defaultCameraHeight = 50f;
     [SerializeField] private float minCameraHeight = 22f;
     [SerializeField] private float zoomSpeed = 80f;
     [SerializeField] private float zoomPercentage;
@@ -28,33 +28,35 @@ public class CameraZoom : MonoBehaviour
     [Header("Offset Options")]
     public float smoothSpeed = 0.125f;
 
-    void Awake()
+    private void Awake()
     {
-        mouseInput = inputManager.GetComponent<MouseInput>();
-        keyboardInput = inputManager.GetComponent<KeyboardInput>();
+        mouseInput = InputManager.Instance.GetComponent<MouseInput>();
+        keyboardInput = InputManager.Instance.GetComponent<KeyboardInput>();
+
+        transform.position = new Vector3 (transform.position.x, defaultCameraHeight, transform.position.y);
+        cameraZoomObject.transform.position = transform.position;
+        cameraZoomObject.transform.rotation = transform.rotation;
 
         anglePercentage = (cameraZoomObject.transform.localEulerAngles.x - minCameraAngle) / (maxCameraAngle - minCameraAngle);
     }
 
-    void Update()
+    private void Update()
     {
         if (CameraManager.Instance.cameraEnabled)
         {
-            if (CameraManager.Instance.cameraEnabled)
+            if (!mouseInput.IsMouseOverUI())
             {
-                if (!mouseInput.IsMouseOverUI())
+                if (mouseInput.mouseScrollStatus > 0f) // forward
                 {
-                    if (mouseInput.mouseScrollStatus > 0f) // forward
-                    {
-                        ZoomCamera();
-                    }
-                    if (mouseInput.mouseScrollStatus < 0f) // backwards
-                    {
-                        UnZoomCamera();   
-                    }
+                    ZoomCamera();
                 }
-            }  
-        }
+                if (mouseInput.mouseScrollStatus < 0f) // backwards
+                {
+                    UnZoomCamera();   
+                }
+            }
+        }  
+        
         if (mouseInput.mouseButtonPressed_2){
             CameraManager.Instance.cameraEnabled = false;
             if (Cursor.lockState == CursorLockMode.None) Cursor.lockState = CursorLockMode.Locked;
@@ -65,12 +67,12 @@ public class CameraZoom : MonoBehaviour
             CameraManager.Instance.cameraEnabled = true;
             Cursor.lockState = CursorLockMode.None;
         }
-        if (keyboardInput.resetCameraPressed){
-            ResetCamera();
-        }
+        // if (keyboardInput.resetCameraPressed){
+        //     ResetCamera();
+        // }
     }
 
-    void ZoomCamera()
+    private void ZoomCamera()
     {
         if (cameraZoomObject.transform.position.y > minCameraHeight | cameraZoomObject.transform.rotation.x > minCameraAngle)
         {
@@ -90,7 +92,7 @@ public class CameraZoom : MonoBehaviour
         }
     }
  
-    void UnZoomCamera()
+    private void UnZoomCamera()
     {
         if (cameraZoomObject.transform.position.y < maxCameraHeight | cameraZoomObject.transform.rotation.x < maxCameraAngle)
         {
@@ -110,7 +112,7 @@ public class CameraZoom : MonoBehaviour
         }
     }
 
-    void RotateCamera ()
+    private void RotateCamera ()
     {
         Vector3 rotation = cameraZoomObject.transform.localEulerAngles;
         Vector3 position = CameraManager.Instance.cameraMovement.cameraFollowObject.position;
@@ -125,8 +127,8 @@ public class CameraZoom : MonoBehaviour
         cameraZoomObject.transform.localEulerAngles = rotation;
         position = CameraManager.Instance.cameraMovement.CalculateCameraOffsetIndependent() + centerOfRotation;
 
-        position.x = Mathf.Clamp(position.x, 0, CameraManager.Instance.cameraMovement.cameraMoveLimit.x);
-        position.z = Mathf.Clamp(position.z, -20, CameraManager.Instance.cameraMovement.cameraMoveLimit.y);
+        position.x = Mathf.Clamp(position.x, 0, CameraManager.Instance.cameraMovement.GetCameraMoveLimit().x);
+        position.z = Mathf.Clamp(position.z, -20, CameraManager.Instance.cameraMovement.GetCameraMoveLimit().y);
         CameraManager.Instance.cameraMovement.cameraFollowObject.position = Vector3.Lerp(CameraManager.Instance.cameraMovement.cameraFollowObject.position, position, zoomSpeed);
         transform.position = CameraManager.Instance.cameraMovement.cameraFollowObject.position;
         CameraManager.Instance.cameraMovement.position = transform.position;
@@ -143,7 +145,7 @@ public class CameraZoom : MonoBehaviour
         cameraZoomObject.transform.localEulerAngles = new Vector3 (cameraZoomObject.transform.localEulerAngles.x, 0, 0);
     }
 
-    void LateUpdate()
+    private void LateUpdate()
     {
         Vector3 smoothedPosition = Vector3.Lerp(transform.position, cameraZoomObject.transform.position, smoothSpeed);
         smoothedPosition.x = transform.position.x;

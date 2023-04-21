@@ -29,7 +29,7 @@ public class BuildingStatusButton : MonoBehaviour
             buttonStatus = 0;
             connectedButton.GetComponent<Image>().sprite = availableBuildingSprite;
         }
-        CityInformationDisplay.Instance.ChangeBuildingStatus(buildingID, buttonStatus);
+        //CityInformationDisplay.Instance.ChangeBuildingStatus(buildingID, buttonStatus);
     }
 
     public void ChangeButtonStatus (short _buttonStatus)
@@ -42,7 +42,7 @@ public class BuildingStatusButton : MonoBehaviour
         }else{
             connectedButton.GetComponent<Image>().sprite = availableBuildingSprite;
         }
-        CityInformationDisplay.Instance.ChangeBuildingStatus(buildingID, buttonStatus);
+       // CityInformationDisplay.Instance.ChangeBuildingStatus(buildingID, buttonStatus);
     }
 
 }

@@ -3,77 +3,35 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Mine : MonoBehaviour
+public class Mine : WorldObject
 {
-    private bool mineReady = false;
-    [SerializeField] GameObject flag;
-
     [Header("Mine information")]
-    [SerializeField] public GameObject ownedByPlayer;
-    public PlayerTag playerTag;
-    public ResourceType mineType;
-    public Vector2Int gridPosition;
-    private Vector3 position;
-    public Vector3 rotation;
-    public ObjectType objectType = ObjectType.Mine;
+    [SerializeField] private ResourceType mineType;
 
     [Header("Mine Garrison references")]
-    [SerializeField] public List <int> garrisonSlotsID;
-    [SerializeField] public List <int> garrisonSlotsCount;
+    [SerializeField] private List<UnitSlot> unitSlots;
 
-    public void AddOwningPlayer(GameObject _ownedByPlayer)
+    public Mine (Vector2Int gridPosition, Vector3 rotation, PlayerTag ownedByPlayer = PlayerTag.None, ResourceType resourceType = ResourceType.Gold, ObjectType objectType = ObjectType.Mine)
+        : base(gridPosition, rotation, objectType, ownedByPlayer)
     {
-        ownedByPlayer = _ownedByPlayer;
-        if (_ownedByPlayer.name != "Neutral Player"){
-            flag.SetActive(true);
-            flag.GetComponent<MeshRenderer>().material.color = _ownedByPlayer.GetComponent<Player>().playerColor;
-        }
-        playerTag = ownedByPlayer.GetComponent<Player>().playerTag;
+        ChangeOwningPlayer(ownedByPlayer);
+        ChangeMineType(mineType);
+
+        // Unit Slots initialization
+        unitSlots = new List<UnitSlot>(7);
+        for (int i = 0; i < unitSlots.Count; i++) unitSlots[i].SetSlotStatus(0, 0);
     }
 
-    private void ChangeOwningPlayer (GameObject _ownedByPlayer)
-    {
-        ownedByPlayer.GetComponent<Player>().ownedMines.Remove(this.gameObject);
-        if (ownedByPlayer.name == "Neutral Player"){
-            ownedByPlayer = _ownedByPlayer;
+    public override void ChangeOwningPlayer (PlayerTag ownedByPlayer = PlayerTag.None){ 
+        PlayerManager.Instance.GetPlayer(ownedByPlayer).RemoveMine(this);
+        base.ChangeOwningPlayer(ownedByPlayer);
+        PlayerManager.Instance.GetPlayer(ownedByPlayer).AddMine(this);
+        if (ownedByPlayer != PlayerTag.None){
             flag.SetActive(true);
-            flag.GetComponent<MeshRenderer>().material.color = _ownedByPlayer.GetComponent<Player>().playerColor;
+            flag.GetComponent<MeshRenderer>().material.color = PlayerManager.Instance.GetPlayerColor(ownedByPlayer);  // Get color from player
         }else{
-            ownedByPlayer = _ownedByPlayer;
-            flag.GetComponent<MeshRenderer>().material.color = _ownedByPlayer.GetComponent<Player>().playerColor;
+            flag.SetActive(false);
         }
-        ownedByPlayer.GetComponent<Player>().ownedMines.Add(this.gameObject);
-        playerTag = ownedByPlayer.GetComponent<Player>().playerTag;
-    }
-
-    public void RemoveOwningPlayer ()
-    {
-        ownedByPlayer = PlayerManager.Instance.neutralPlayer;
-        flag.SetActive(false);
-    }
-
-    public void MineInitialization (Vector2Int _gridPosition)
-    {
-        playerTag = PlayerTag.None;
-        mineType = ResourceType.Gold;
-        gridPosition = _gridPosition;
-        transform.localEulerAngles = rotation;
-
-        for (int i = 0; i < 7; i++){
-            garrisonSlotsID.Add(0);
-            garrisonSlotsCount.Add(0);
-        }
-    }
-
-    public float GetMineRotation ()
-    {
-        return rotation.y;
-    }
-
-    public void ChangeMineRotation (int _rotation)
-    {
-        transform.localEulerAngles = new Vector3 (0, _rotation, 0);
-        rotation = transform.localEulerAngles;
     }
 
     public void ChangeMineType (ResourceType _mineType)
@@ -81,19 +39,19 @@ public class Mine : MonoBehaviour
         mineType = _mineType;
     }
 
-    public List<int> GetConvertedMineInformation ()
+    public override List<int> GetConvertedObjectInformation ()
     {
         List<int> mineInfo = new List<int>();
 
-        mineInfo.Add((int)ownedByPlayer.GetComponent<Player>().playerTag);
-        mineInfo.Add(gridPosition.x);
-        mineInfo.Add(gridPosition.y);
-        mineInfo.Add(Convert.ToInt32(rotation.y));
+        mineInfo.Add((int)GetPlayerTag());
+        mineInfo.Add(GetGridPosition().x);
+        mineInfo.Add(GetGridPosition().y);
+        mineInfo.Add(Convert.ToInt32(GetRotation()));
         mineInfo.Add((int)mineType);
 
         for (int i = 0; i < 7; i++){
-            mineInfo.Add(garrisonSlotsID[i]);
-            mineInfo.Add(garrisonSlotsCount[i]);
+            mineInfo.Add(unitSlots[i].GetSlotUnitID());
+            mineInfo.Add(unitSlots[i].GetSlotUnitCount());
         }
 
         return mineInfo;

@@ -5,7 +5,7 @@ using UnityEngine;
 [System.Serializable ,CreateAssetMenu(fileName = "MapInformationObject", menuName = "ScriptableObjects/MapInformation")]
 public class MapScriptableObject : ScriptableObject
 {
-    [SerializeField] public Vector2Int mapSize;
+    [SerializeField] public int mapSize;
     [SerializeField] public short numberOfPlayers;
     [SerializeField] public List<PlayerTag> players;
     [SerializeField] public short numberOfPossibleHumanPlayers;

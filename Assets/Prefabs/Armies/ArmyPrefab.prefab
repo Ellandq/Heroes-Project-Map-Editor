@@ -46,13 +46,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   flag: {fileID: 6560312266923234945}
-  ownedByPlayer: {fileID: 0}
+  objectType: 1
+  ownedByPlayer: 0
   gridPosition: {x: 0, y: 0}
   rotation: {x: 0, y: 0, z: 0}
-  objectType: 1
-  playerTag: 0
-  unitSlotsID: 
-  unitSlotsCount: 
+  unitSlots: []
 --- !u!1 &6560312266923234945
 GameObject:
   m_ObjectHideFlags: 0

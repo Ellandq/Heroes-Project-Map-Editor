@@ -14,7 +14,8 @@ public class GridCell : MonoBehaviour
     [Header ("Slope information")]
     [SerializeField] private bool isSlope;
     [SerializeField] private bool isSlopeEnterance;
-    [SerializeField] private List<Vector2Int> slopeEnterances;
+    [SerializeField] private List<Vector2Int> slopeEntrances;
+    [SerializeField] private SlopeType slopeType;
 
     [Header ("Material references")]
     [SerializeField] private Material material;
@@ -55,6 +56,10 @@ public class GridCell : MonoBehaviour
         return isSlopeEnterance;
     }
 
+    public SlopeType GetSlopeType (){
+        return slopeType;
+    }
+
     #endregion
 
     #region Occupying object status
@@ -88,29 +93,73 @@ public class GridCell : MonoBehaviour
 
     public void ChangeCellLevel (float level){
         heightLevel = level;
-        worldPosition.y = level * 5 + 0.1f;
+        worldPosition.y = level * 2.5f + 0.1f;
         transform.position = worldPosition;
-        if (isSlope){
-
-        }
-    }
-
-    public void ResetSlope (){
-        
     }
 
     public void ChangeSlopeStatus (){
-        for (int i = 0; i < slopeEnterances.Count; i++){
-            
+        isSlope = false;
+        transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+        slopeType = SlopeType.None;
+        for (int i = 0; i < slopeEntrances.Count; i++){
+            GameGrid.Instance.GetGridCellInformation(slopeEntrances[i]).ChangeSlopeEntranceStatus(false);
         }
     }
 
-    public void ChangeSlopeStatus (List<Vector2Int> _slopeEnterances){
-        slopeEnterances = new List<Vector2Int>(_slopeEnterances);
+    
+    public void ChangeSlopeStatus(List<Vector2Int> _slopeEntrances, SlopeType _slopeType) {
+        slopeEntrances = new List<Vector2Int>(_slopeEntrances);
+        isSlope = true;
+        slopeType = _slopeType;
+        for (int i = 0; i < slopeEntrances.Count; i++) {
+            GameGrid.Instance.GetGridCellInformation(slopeEntrances[i]).ChangeSlopeEntranceStatus(true);
+        }
+
+        switch (slopeType) {
+            case SlopeType.LeftToRight:
+                transform.rotation = Quaternion.Euler(0f, 0f, 25f);
+                break;
+            case SlopeType.RightToLeft:
+                transform.rotation = Quaternion.Euler(0f, 0f, -25f);
+                break;
+            case SlopeType.BottomToTop:
+                transform.rotation = Quaternion.Euler(-25f, 0f, 0f);
+                break;
+            case SlopeType.TopToBottom:
+                transform.rotation = Quaternion.Euler(25f, 0f, 0f);
+                break;
+            default:
+                break;
+        }
     }
 
-    public void ChangeSlopeEnteranceStatus (){
+    public void ChangeSlopeStatus(Vector2Int _slopeEntrance, SlopeType _slopeType) {
+        slopeEntrances = new List<Vector2Int>(){_slopeEntrance};
+        isSlope = true;
+        slopeType = _slopeType;
+        GameGrid.Instance.GetGridCellInformation(slopeEntrances[0]).ChangeSlopeEntranceStatus(true);
+        
 
+        switch (slopeType) {
+            case SlopeType.BottomLeftToTopRight:
+                transform.rotation = Quaternion.Euler(-15f, 0f, 15f);
+                break;
+            case SlopeType.BottomRightToTopLeft:
+                transform.rotation = Quaternion.Euler(-15f, 0f, -15f);
+                break;
+            case SlopeType.TopLeftToBottomRight:
+                transform.rotation = Quaternion.Euler(15f, 0f, 15f);
+                break;
+            case SlopeType.TopRightToBottomLeft:
+                transform.rotation = Quaternion.Euler(15f, 0f, -15f);
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void ChangeSlopeEntranceStatus (bool status){
+        isSlopeEnterance = status;
     }
 
     public void ChangeCellHighlight(Color color){

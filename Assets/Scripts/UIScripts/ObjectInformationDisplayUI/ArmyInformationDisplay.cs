@@ -32,11 +32,11 @@ public class ArmyInformationDisplay : MonoBehaviour
     {
         army = _army;
         this.gameObject.SetActive(true);
-        UpdatePositionDisplay(army.gridPosition);
-        ObjectInformationDisplay.Instance.UpdateObjectTypeDisplay(army.objectType);
+        UpdatePositionDisplay(army.GetGridPosition());
+        //ObjectInformationDisplay.Instance.UpdateObjectTypeDisplay(army.GetObjectType());
         UpdateRotationDisplay();
         UpdatePlayerOwnerOptions();
-        unitDisplay.UpdateUnitDisplay(army.unitSlotsID, army.unitSlotsCount);
+        //unitDisplay.UpdateUnitDisplay(army.unitSlotsID, army.unitSlotsCount);
     }
 
     private void UpdatePositionDisplay (Vector2Int gridPosition){
@@ -48,21 +48,21 @@ public class ArmyInformationDisplay : MonoBehaviour
     {
         playerOwnershipOptions.ClearOptions();
         playerOwnershipOptions.options.Add(new TMP_Dropdown.OptionData(Enum.GetName(typeof(PlayerTag), PlayerTag.None)));
-        foreach (PlayerTag _player in PlayerManager.Instance.existingPlayers){
-            playerOwnershipOptions.options.Add(new TMP_Dropdown.OptionData(Enum.GetName(typeof(PlayerTag), _player)));
-        }
+        // foreach (PlayerTag _player in PlayerManager.Instance.players){
+        //     playerOwnershipOptions.options.Add(new TMP_Dropdown.OptionData(Enum.GetName(typeof(PlayerTag), _player)));
+        // }
         
-        PlayerManager.Instance.GetCurrentPlayerIndex(army.playerTag);
+        //PlayerManager.Instance.GetCurrentPlayerIndex(army.playerTag);
     }
 
     public void ChangeArmyOwner (int index)
     {
         if (army != null){
-            if (index != 0){
-                army.AddOwningPlayer(PlayerManager.Instance.players[index - 1].gameObject);
-            }else{
-                army.AddOwningPlayer(PlayerManager.Instance.neutralPlayer);
-            }
+            // if (index != 0){
+            //     army.AddOwningPlayer(PlayerManager.Instance.players[index - 1].gameObject);
+            // }else{
+            //     army.AddOwningPlayer(PlayerManager.Instance.neutralPlayer);
+            // }
         }
     }
 
@@ -71,7 +71,7 @@ public class ArmyInformationDisplay : MonoBehaviour
         int rotationChange = Convert.ToInt32(_rotationChange);
         if (army != null){
             if (rotationChange == 0 || rotationChange == 90 || rotationChange == 180 || rotationChange == 270 || rotationChange == 360){
-            army.ChangeArmyRotation(rotationChange);
+            army.UpdateObjectRotation(rotationChange);
             UpdateRotationDisplay();
             }else{
                 UpdateRotationDisplay();
@@ -81,14 +81,14 @@ public class ArmyInformationDisplay : MonoBehaviour
 
     public void ChangeArmyRotation ()
     {
-        int rotationChange = Convert.ToInt32(army.rotation.y);
+        int rotationChange = Convert.ToInt32(army.GetRotation());
         rotationChange += 90;
         if (army != null){
             if (rotationChange > 270){
-                army.ChangeArmyRotation(0);
+                army.UpdateObjectRotation(0);
                 UpdateRotationDisplay();
             }else{
-                army.ChangeArmyRotation(rotationChange);
+                army.UpdateObjectRotation(rotationChange);
                 UpdateRotationDisplay();
             }
         } 
@@ -97,21 +97,21 @@ public class ArmyInformationDisplay : MonoBehaviour
     private void UpdateRotationDisplay ()
     {
         if (army != null){
-            armyRotationDisplay.text = Convert.ToString(army.GetArmyRotation());
+            armyRotationDisplay.text = Convert.ToString(army.GetRotation());
         }
     }
 
     public void UpdateArmyUnits ()
     {
-        for (int i = 0; i < 7; i ++){
-            try{
-                army.unitSlotsID[i] = (int)Enum.Parse(typeof(UnitName), unitDisplay.unitIdDisplay[i].text);
-                army.unitSlotsCount[i] = Convert.ToInt32(unitDisplay.unitCountDisplay[i].text);
-            }catch (ArgumentException){
-                army.unitSlotsID[i] = Enum.GetValues(typeof(UnitName)).Cast<int>().Max() + (int)Enum.Parse(typeof(HeroTag), unitDisplay.unitIdDisplay[i].text);
-                army.unitSlotsCount[i] = 1;
-            }
-        }
-        unitDisplay.UpdateUnitDisplay(army.unitSlotsID, army.unitSlotsCount);
+        // for (int i = 0; i < 7; i ++){
+        //     try{
+        //         army.unitSlotsID[i] = (int)Enum.Parse(typeof(UnitName), unitDisplay.unitIdDisplay[i].text);
+        //         army.unitSlotsCount[i] = Convert.ToInt32(unitDisplay.unitCountDisplay[i].text);
+        //     }catch (ArgumentException){
+        //         army.unitSlotsID[i] = Enum.GetValues(typeof(UnitName)).Cast<int>().Max() + (int)Enum.Parse(typeof(HeroTag), unitDisplay.unitIdDisplay[i].text);
+        //         army.unitSlotsCount[i] = 1;
+        //     }
+        // }
+        // unitDisplay.UpdateUnitDisplay(army.unitSlotsID, army.unitSlotsCount);
     }
 }

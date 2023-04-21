@@ -75,10 +75,8 @@ public class WorldObjectManager : MonoBehaviour
     #endregion
 
     #region City
-    private void InitialCitySetup (Vector2Int _gridPosition)
-    {
-        Vector2Int gridPosition = _gridPosition;
-        
+    private void InitialCitySetup (Vector2Int gridPosition)
+    {    
         if (GameGrid.Instance.GetGridCellInformation(gridPosition).isOccupied){
             Debug.Log("Objects overlapping");
             return;
@@ -86,17 +84,12 @@ public class WorldObjectManager : MonoBehaviour
 
         Vector3 objectPosition = GameGrid.Instance.GetWorldPosFromGridPos(gridPosition);
 
-        cities.Add(Instantiate(cityPrefab, objectPosition, Quaternion.identity));
-        cities[numberOfCities].GetComponent<City>().CityInitialization(
-            gridPosition
-        );
+        cities.Add(Instantiate(cityPrefab, transform.position, Quaternion.identity));
+        City city = cities[numberOfCities].GetComponent<City>();
+        city = new City (gridPosition, transform.localEulerAngles, CityFraction.Random, PlayerTag.None);
         cities[numberOfCities].transform.parent = transform;
         cities[numberOfCities].gameObject.name = "City " + (numberOfCities + 1);
-   
-        chosenPlayer = PlayerManager.Instance.neutralPlayer.GetComponent<Player>();
-        chosenPlayer.NewCity(cities[numberOfCities]);
     
-        GameGrid.Instance.GetGridCellInformation(gridPosition).isOccupied = true;
         numberOfCities++;   
     }
     #endregion
@@ -109,27 +102,19 @@ public class WorldObjectManager : MonoBehaviour
     #endregion
 
     #region Mine
-    private void InitialMineSetup (Vector2Int _gridPosition)
-    {
-        Vector2Int gridPosition = _gridPosition;
-        
+    private void InitialMineSetup (Vector2Int gridPosition)
+    {       
         if (GameGrid.Instance.GetGridCellInformation(gridPosition).isOccupied){
             Debug.Log("Objects overlapping");
             return;
         }
 
-        Vector3 objectPosition = GameGrid.Instance.GetWorldPosFromGridPos(gridPosition);
-
-        mines.Add(Instantiate(minePrefab, objectPosition, Quaternion.identity));
-        mines[numberOfMines].GetComponent<Mine>().MineInitialization(gridPosition);
+        mines.Add(Instantiate(minePrefab, transform.position, Quaternion.identity));
+        Mine mine = mines[numberOfMines].GetComponent<Mine>();
+        mine = new Mine(gridPosition, transform.localEulerAngles, PlayerTag.None, ResourceType.Gold);
         mines[numberOfMines].transform.parent = transform;
-        mines[numberOfMines].gameObject.name = "Mine : " + (numberOfMines + 1);
-        
-        chosenPlayer = PlayerManager.Instance.neutralPlayer.GetComponent<Player>();
-        chosenPlayer.NewMine(mines[numberOfMines]);
-        
+        mines[numberOfMines].gameObject.name = "Mine : " + (numberOfMines + 1);     
 
-        GameGrid.Instance.GetGridCellInformation(gridPosition).isOccupied = true;
         numberOfMines++;
     }
     #endregion
@@ -142,10 +127,8 @@ public class WorldObjectManager : MonoBehaviour
     #endregion
 
     #region Army
-    private void InitialArmySetup (Vector2Int _gridPosition)
+    private void InitialArmySetup (Vector2Int gridPosition)
     {
-        Vector2Int gridPosition = _gridPosition;
-
         if (GameGrid.Instance.GetGridCellInformation(gridPosition).isOccupied){
             Debug.Log("Objects overlapping");
             return;
@@ -154,48 +137,28 @@ public class WorldObjectManager : MonoBehaviour
         Vector3 objectPosition = GameGrid.Instance.GetWorldPosFromGridPos(gridPosition);
 
         armies.Add(Instantiate(armyPrefab, objectPosition, Quaternion.identity));
-        armies[numberOfArmies].GetComponent<Army>().ArmyInitialization(gridPosition);
+        Army army = armies[numberOfArmies].GetComponent<Army>();
+        army = new Army(gridPosition, transform.localEulerAngles, PlayerTag.None);
         armies[numberOfArmies].transform.parent = transform;
         armies[numberOfArmies].gameObject.name = "Army " + (numberOfArmies + 1);
 
-        
-        chosenPlayer = PlayerManager.Instance.neutralPlayer.GetComponent<Player>();
-        chosenPlayer.NewArmy(armies[numberOfArmies]);
-
-        GameGrid.Instance.GetGridCellInformation(gridPosition).isOccupied = true;
         numberOfArmies++;   
-    }
-
-    public void RemoveArmy (GameObject selectedArmy)
-    {
-        chosenPlayer = selectedArmy.GetComponent<Army>().ownedByPlayer.GetComponent<Player>();
-        chosenPlayer.RemoveArmy(selectedArmy);
-        for (int i = 0; i < armies.Count; i++){
-            if (armies[i].name == selectedArmy.name){
-                armies.RemoveAt(i);
-            }
-        }
-        numberOfArmies--;  
     }
     #endregion
 
     #region Resources
-    private void InitialResourceSetup (Vector2Int _gridPosition)
+    private void InitialResourceSetup (Vector2Int gridPosition)
     {
-        Vector2Int gridPosition = _gridPosition;
-
         if (GameGrid.Instance.GetGridCellInformation(gridPosition).isOccupied){
             Debug.Log("Objects overlapping");
             return;
         }
-        Vector3 objectPosition = GameGrid.Instance.GetWorldPosFromGridPos(gridPosition);
-
-        resources.Add(Instantiate(resourcePrefab, objectPosition, Quaternion.identity));
-        resources[numberOfResources].GetComponent<ResourcesObj>().ResourceInitialization(gridPosition);
+        resources.Add(Instantiate(resourcePrefab, transform.position, Quaternion.identity));
+        ResourcesObject resourcesObject = resources[numberOfResources].GetComponent<ResourcesObject>();
+        resourcesObject = new ResourcesObject (gridPosition, transform.localEulerAngles, PlayerTag.None, ResourceType.Gold);
         resources[numberOfResources].transform.parent = transform;
         resources[numberOfResources].gameObject.name = "Resource: " + (numberOfResources + 1);
 
-        GameGrid.Instance.GetGridCellInformation(gridPosition).isOccupied = true;
         numberOfResources++;  
     }
     #endregion
@@ -218,4 +181,8 @@ public enum ObjectType{
 
 public enum ResourceType{
     Gold, Wood, Ore, Gems, Mercury, Sulfur, Crystal
+}
+
+public enum CityBuildingStatus{
+    NotBuilt, Built, Blocked
 }

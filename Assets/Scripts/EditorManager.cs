@@ -13,8 +13,9 @@ public class EditorManager : MonoBehaviour
     [Header ("Map Information")]
     [SerializeField] private MapScriptableObject mapScriptableObject;
     [SerializeField] private MapWorldObjects mapWorldObjects;
-    [SerializeField] public Vector2Int gridSize;
     [SerializeField] public string mapName;
+    [SerializeField] public int mapSize;
+    [SerializeField] private bool mapCreated;
 
     [Header ("Terrain information")]
     [SerializeField] private TerrainManager terrainManager;
@@ -22,6 +23,7 @@ public class EditorManager : MonoBehaviour
     private void Awake ()
     {
         Instance = this;
+        mapCreated = false;
         Screen.fullScreenMode = FullScreenMode.MaximizedWindow;
     }
 
@@ -32,13 +34,27 @@ public class EditorManager : MonoBehaviour
 
     #region World Creation
 
-    public void CreateGrid(Vector2Int size){
-        gridSize = size;
-        CameraManager.Instance.cameraMovement.UpdateMovementBorder(size);
-        GameGrid.Instance.CreateGrid(size);
-        terrainManager.SetUpTerrainManager(size);
+    public void CreateMap (string _mapName, int _mapSize, bool _enableUnderground){
+        if (mapCreated) DestroyMap();
+        // Set the map name
+        mapName = _mapName;
 
-    }  
+        // Set the map size
+        mapSize = _mapSize;
+
+        // Setup the camera borders
+        CameraManager.Instance.cameraMovement.UpdateMovementBorder(mapSize);
+
+        // Create the grid
+        GameGrid.Instance.CreateGrid(mapSize);
+
+        // Create the terrain
+        terrainManager.SetUpTerrainManager(mapSize);
+    }
+
+    private void DestroyMap (){
+
+    }
 
     #endregion
 
@@ -46,17 +62,17 @@ public class EditorManager : MonoBehaviour
 
     public void SaveMap ()
     {
-        mapScriptableObject.mapSize = new Vector2Int(0, 0);
+        mapScriptableObject.mapSize = 0;
         mapScriptableObject.numberOfPlayers = 0;
         mapScriptableObject.players.Clear();
         mapScriptableObject.numberOfPossibleHumanPlayers = 0;
         mapScriptableObject.possibleHumanPlayers.Clear();
 
-        mapScriptableObject.mapSize = gridSize;
-        mapScriptableObject.numberOfPlayers = Convert.ToInt16(PlayerManager.Instance.existingPlayers.Count);;
-        mapScriptableObject.players = PlayerManager.Instance.existingPlayers;
-        mapScriptableObject.numberOfPossibleHumanPlayers = Convert.ToInt16(PlayerManager.Instance.existingPlayers.Count);
-        mapScriptableObject.possibleHumanPlayers = PlayerManager.Instance.existingPlayers;
+        mapScriptableObject.mapSize = mapSize;
+        // mapScriptableObject.numberOfPlayers = Convert.ToInt16(PlayerManager.Instance.existingPlayers.Count);;
+        // mapScriptableObject.players = PlayerManager.Instance.existingPlayers;
+        // mapScriptableObject.numberOfPossibleHumanPlayers = Convert.ToInt16(PlayerManager.Instance.existingPlayers.Count);
+        // mapScriptableObject.possibleHumanPlayers = PlayerManager.Instance.existingPlayers;
 
 
         mapWorldObjects.cities = new List<int>();
@@ -71,22 +87,22 @@ public class EditorManager : MonoBehaviour
         mapWorldObjects.mapName = mapName;
         
         foreach (GameObject _city in  WorldObjectManager.Instance.cities){
-            mapWorldObjects.cities.AddRange(_city.GetComponent<City>().GetConvertedCityInformation());
+            mapWorldObjects.cities.AddRange(_city.GetComponent<City>().GetConvertedObjectInformation());
             mapWorldObjects.citiesCount++;
         }
 
         foreach (GameObject _army in  WorldObjectManager.Instance.armies){
-            mapWorldObjects.armies.AddRange(_army.GetComponent<Army>().GetConvertedArmyInformation());
+            mapWorldObjects.armies.AddRange(_army.GetComponent<Army>().GetConvertedObjectInformation());
             mapWorldObjects.armiesCount++;
         }
 
         foreach (GameObject _mine in  WorldObjectManager.Instance.mines){
-            mapWorldObjects.mines.AddRange(_mine.GetComponent<Mine>().GetConvertedMineInformation());
+            mapWorldObjects.mines.AddRange(_mine.GetComponent<Mine>().GetConvertedObjectInformation());
             mapWorldObjects.minesCount++;
         }
 
         foreach (GameObject _resource in  WorldObjectManager.Instance.resources){
-            mapWorldObjects.resources.AddRange(_resource.GetComponent<ResourcesObj>().GetConvertedResourceInformation());
+            mapWorldObjects.resources.AddRange(_resource.GetComponent<ResourcesObject>().GetConvertedObjectInformation());
             mapWorldObjects.resourcesCount++;
         }
        SaveMapToFile();
