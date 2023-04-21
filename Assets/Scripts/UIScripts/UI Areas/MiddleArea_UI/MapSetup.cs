@@ -28,7 +28,7 @@ public class MapSetup : MonoBehaviour
     [SerializeField] private Sprite button_Deselected;
 
     private void Awake (){
-        ResetDisplay();
+        EnableDisplay();
     }
 
     public void ChangeSelectedMapSize (string size){
@@ -111,10 +111,12 @@ public class MapSetup : MonoBehaviour
     public void EnableDisplay (){
         this.gameObject.SetActive(true);
         ResetDisplay();
+        CameraManager.Instance.DisableCameraMovement();
     }
 
     public void DisableDisplay (){
         this.gameObject.SetActive(false);
+        CameraManager.Instance.EnableCameraMovement();
     }
 
     public void CreateMap (){

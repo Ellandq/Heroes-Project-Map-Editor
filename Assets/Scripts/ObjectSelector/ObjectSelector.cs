@@ -24,8 +24,8 @@ public class ObjectSelector : MonoBehaviour
     [SerializeField] public string selectedObjectTag;
     [SerializeField] public Vector2Int selectedGridPosition;
 
-    [Header ("Object references")]
-    [SerializeField] private ObjectCreationUI objectCreationUI;
+    //[Header ("Object references")]
+    //[SerializeField] private ObjectCreationUI objectCreationUI;
 
     private void Awake ()
     {
@@ -50,8 +50,8 @@ public class ObjectSelector : MonoBehaviour
         }
 
         // Checks if the mouse button 0 is pressed
-        if (InputManager.Instance.mouseInput.mouseButtonPressed_0)
-        {
+        // if (InputManager.Instance.mouseInput.mouseButtonPressed_0)
+        // {
             // Uses different logic depending on the selected object 
             // switch (selectedObjectTag)
             // {
@@ -109,7 +109,7 @@ public class ObjectSelector : MonoBehaviour
             //         selectedObjectTag = null;
             //     break;
             // }
-        }  
+        //}  
     }
 
     public void ObjectInteraction ()
@@ -117,7 +117,7 @@ public class ObjectSelector : MonoBehaviour
         if (selectedObject != null){
             if (selectedObjectTag == "GridCell"){
                 selectedGridPosition = selectedObject.GetComponent<GridCell>().GetPosition();
-                objectCreationUI.UpdateElement();
+                //objectCreationUI.UpdateElement();
 
             }
         }

@@ -8,54 +8,30 @@ public class KeyboardInput : MonoBehaviour
     [SerializeField] InputManager inputManager;
 
     [Header ("Events")]
-    public Action onUpPressed;
-    public Action onDownPressed;
-    public Action onLeftPressed;
-    public Action onRightPressed;
-    public Action onResetPressed;
+    public Action onForwardChangedState;
+    public Action onBackwardChangedState;
+    public Action onLeftChangedState;
+    public Action onRightChangedState;
+    public Action onResetButtonPressed;
     public Action onLeftShiftChangedState;
-
-    [Header ("Button states")]
-    private bool isLeftShiftPressed;
-
-    // internal bool isUpPressed;
-    // internal bool isDownPressed;
-    // internal bool isLeftPressed;
-    // internal bool isRightPressed;
-    // internal bool resetCameraPressed;
-    //internal bool isTabKeyPressed;
-    //internal bool isSpaceKeyPressed
 
     private void Update ()
     {
-        if(Input.GetKey(KeyCode.A)){
-            onLeftPressed?.Invoke();
-        }
+        if(Input.GetKeyDown(KeyCode.A)) onLeftChangedState?.Invoke();
+        if (Input.GetKeyUp(KeyCode.A)) onLeftChangedState?.Invoke();
 
-        if(Input.GetKey(KeyCode.D)){
-            onRightPressed?.Invoke();
-        }
+        if(Input.GetKeyDown(KeyCode.D)) onRightChangedState?.Invoke();
+        if (Input.GetKeyUp(KeyCode.D)) onRightChangedState?.Invoke();
 
-        if(Input.GetKey(KeyCode.W)){
-            onUpPressed?.Invoke();
-        }
+        if(Input.GetKeyDown(KeyCode.W)) onForwardChangedState?.Invoke();
+        if (Input.GetKeyUp(KeyCode.W)) onForwardChangedState?.Invoke();
 
-        if(Input.GetKey(KeyCode.S)){
-            onDownPressed?.Invoke();
-        }
+        if(Input.GetKeyDown(KeyCode.S)) onBackwardChangedState?.Invoke();
+        if (Input.GetKeyUp(KeyCode.S)) onBackwardChangedState?.Invoke();
 
-        if(Input.GetKey(KeyCode.R)){
-            onResetPressed?.Invoke();
-        }
+        if(Input.GetKeyDown(KeyCode.R)) onResetButtonPressed?.Invoke();
 
-        if(Input.GetKey(KeyCode.LeftShift)){
-            if (!isLeftShiftPressed){
-                onLeftShiftChangedState?.Invoke();
-                isLeftShiftPressed = true;
-            }
-        }else if (isLeftShiftPressed){
-            isLeftShiftPressed = false;
-            onLeftShiftChangedState?.Invoke();
-        }
+        if (Input.GetKeyDown(KeyCode.LeftShift)) onLeftShiftChangedState?.Invoke();
+        if (Input.GetKeyUp(KeyCode.LeftShift)) onLeftShiftChangedState?.Invoke();
     }
 }

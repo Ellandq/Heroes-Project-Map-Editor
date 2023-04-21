@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,52 +6,45 @@ using UnityEngine.EventSystems;
 
 public class MouseInput : MonoBehaviour
 {
-    [SerializeField] InputManager inputManager;
-    [SerializeField] internal Vector3 screenPosition;
-    [SerializeField] internal Vector3 worldPosition;
-    [SerializeField] LayerMask pointerLayersToHit;
-    internal float mouseScrollStatus;
-    LayerMask layersToHit;
+    [SerializeField] private InputManager inputManager;
+    
+    [SerializeField] private LayerMask layersToHit;
 
-    public bool mouseButtonPressed_0;
-    public bool mouseButtonPressed_1;
-    public bool mouseButtonPressed_2;
+    [Header ("Events")]
+    public Action onLeftMouseButton_Down;
+    public Action onLeftMouseButton_Up;
+    public Action onRightMouseButton_Down;
+    public Action onRightMouseButton_Up;
+    public Action onMiddleMouseButton_Down;
+    public Action onMiddleMouseButton_Up;
+    public Action onScrollWheelMove_Up;
+    public Action onScrollWheelMove_Down;
 
     private void Update ()
     {
-        screenPosition = Input.mousePosition;  
-        mouseScrollStatus = Input.mouseScrollDelta.y;
         GetMouseInput();
     }
 
     // Checks what mouse buttons are pressed
     private void GetMouseInput ()
     {
-        if (Input.GetMouseButton(0))
-        {
-            mouseButtonPressed_0 = true;
-        }else{
-            mouseButtonPressed_0 = false;
-        }
-        if (Input.GetMouseButton(1))
-        {
-            mouseButtonPressed_1 = true;
-            ObjectSelector.Instance.ObjectInteraction();
-        }else{
-            mouseButtonPressed_1 = false;
-        }
-        if (Input.GetMouseButton(2))
-        {
-            mouseButtonPressed_2 = true;
-        }else{
-            mouseButtonPressed_2 = false;
-        }
+        if (Input.GetMouseButtonDown(0)) onLeftMouseButton_Down?.Invoke();
+        else if (Input.GetMouseButtonUp(0)) onLeftMouseButton_Up?.Invoke();
+        if (Input.GetMouseButtonDown(1)) onRightMouseButton_Down?.Invoke();
+        else if (Input.GetMouseButtonUp(1)) onRightMouseButton_Up?.Invoke();
+        if (Input.GetMouseButtonDown(2)) onMiddleMouseButton_Down?.Invoke();
+        else if (Input.GetMouseButtonUp(2)) onMiddleMouseButton_Up?.Invoke();
+
+        // Check for scroll wheel input
+        float scrollDelta = Input.mouseScrollDelta.y;
+        if (scrollDelta > 0f) onScrollWheelMove_Up?.Invoke();
+        else if (scrollDelta < 0f) onScrollWheelMove_Down?.Invoke();
     }
 
     // Returns the mouse world position
     public Vector3 MouseWorldPosition(LayerMask layersToHit)
     {
-        Ray ray = Camera.main.ScreenPointToRay(screenPosition);
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         
         if(Physics.Raycast(ray, out RaycastHit hitData, 100, layersToHit))
         {
@@ -65,9 +59,9 @@ public class MouseInput : MonoBehaviour
     // Returns the object that the mouse is over
     public GameObject MouseOverWorldObject()
     {
-        Ray ray = Camera.main.ScreenPointToRay(screenPosition);
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         
-        if(Physics.Raycast(ray, out RaycastHit hitData, 100, pointerLayersToHit))
+        if(Physics.Raycast(ray, out RaycastHit hitData, 100, LayerMask.GetMask("WorldObject")))
         {
             Collider gridCellCollider = hitData.collider;
             return gridCellCollider.gameObject;

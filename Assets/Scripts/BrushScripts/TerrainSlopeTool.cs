@@ -11,9 +11,9 @@ public class TerrainSlopeTool : MonoBehaviour
 
     public void ActivateTerrainSlopeTool(){
         BrushHandler.Instance.ChangeBrushSize(1);
-        BrushHandler.Instance.onLeftMouseButtonPressed.AddListener(UpdateGridCellSelection);
-        BrushHandler.Instance.onRightMouseButtonPressed.AddListener(AttemptSlopeRemoval);
-        BrushHandler.Instance.onNoButtonPressesDetected.AddListener(AttemptSlopeCreation);
+        BrushHandler.Instance.onLeftMouseButtonAction += UpdateGridCellSelection;
+        BrushHandler.Instance.onRightMouseButtonAction += AttemptSlopeRemoval;
+        BrushHandler.Instance.onNoButtonPressesDetected += AttemptSlopeCreation;
         selectedGridCells = new List<Vector2Int>();
     }
 

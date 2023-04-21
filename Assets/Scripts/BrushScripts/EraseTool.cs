@@ -15,7 +15,7 @@ public class EraseTool : MonoBehaviour
     [SerializeField] private TMP_Text brushSizeDisplay;
 
     public void ActivateSelectTool(){
-        BrushHandler.Instance.onLeftMouseButtonPressed.AddListener(EraseObjects);
+        BrushHandler.Instance.onLeftMouseButtonAction += EraseObjects;
     }
 
     public void UpdateBrushSize (float size){

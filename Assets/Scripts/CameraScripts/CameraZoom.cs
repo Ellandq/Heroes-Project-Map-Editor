@@ -3,12 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class CameraZoom : MonoBehaviour
-{
-    private MouseInput mouseInput;
-    private KeyboardInput keyboardInput;
-    
+{  
     public Transform cameraZoomObject;
-
     private float zoomObjectRotation;
     private bool centerCalculated;
 
@@ -30,8 +26,7 @@ public class CameraZoom : MonoBehaviour
 
     private void Awake()
     {
-        mouseInput = InputManager.Instance.GetComponent<MouseInput>();
-        keyboardInput = InputManager.Instance.GetComponent<KeyboardInput>();
+        //InputManager.Instance.keyboardInput.onResetPressed += ResetCamera;
 
         transform.position = new Vector3 (transform.position.x, defaultCameraHeight, transform.position.y);
         cameraZoomObject.transform.position = transform.position;
@@ -44,31 +39,28 @@ public class CameraZoom : MonoBehaviour
     {
         if (CameraManager.Instance.cameraEnabled)
         {
-            if (!mouseInput.IsMouseOverUI())
+            if (!InputManager.Instance.mouseInput.IsMouseOverUI())
             {
-                if (mouseInput.mouseScrollStatus > 0f) // forward
-                {
-                    ZoomCamera();
-                }
-                if (mouseInput.mouseScrollStatus < 0f) // backwards
-                {
-                    UnZoomCamera();   
-                }
+                // if (InputManager.Instance.mouseInput.mouseScrollStatus > 0f) // forward
+                // {
+                //     ZoomCamera();
+                // }
+                // if (InputManager.Instance.mouseInput.mouseScrollStatus < 0f) // backwards
+                // {
+                //     UnZoomCamera();   
+                // }
             }
         }  
         
-        if (mouseInput.mouseButtonPressed_2){
-            CameraManager.Instance.cameraEnabled = false;
-            if (Cursor.lockState == CursorLockMode.None) Cursor.lockState = CursorLockMode.Locked;
-            RotateCamera();
+        // if (InputManager.Instance.mouseInput.mouseButtonPressed_2){
+        //     CameraManager.Instance.cameraEnabled = false;
+        //     if (Cursor.lockState == CursorLockMode.None) Cursor.lockState = CursorLockMode.Locked;
+        //     RotateCamera();
 
-        }else{
-            centerCalculated = false;
-            CameraManager.Instance.cameraEnabled = true;
-            Cursor.lockState = CursorLockMode.None;
-        }
-        // if (keyboardInput.resetCameraPressed){
-        //     ResetCamera();
+        // }else{
+        //     centerCalculated = false;
+        //     CameraManager.Instance.cameraEnabled = true;
+        //     Cursor.lockState = CursorLockMode.None;
         // }
     }
 
@@ -110,28 +102,6 @@ public class CameraZoom : MonoBehaviour
 
             cameraZoomObject.transform.position = position;
         }
-    }
-
-    private void RotateCamera ()
-    {
-        Vector3 rotation = cameraZoomObject.transform.localEulerAngles;
-        Vector3 position = CameraManager.Instance.cameraMovement.cameraFollowObject.position;
-        float currentMousePosition = Input.GetAxis("Mouse X");
-
-        if (!centerCalculated){
-            centerOfRotation = CameraManager.Instance.cameraMovement.CalculateCenterOfRotation();
-            centerCalculated = true;
-        }
-        
-        rotation.y += currentMousePosition;
-        cameraZoomObject.transform.localEulerAngles = rotation;
-        position = CameraManager.Instance.cameraMovement.CalculateCameraOffsetIndependent() + centerOfRotation;
-
-        position.x = Mathf.Clamp(position.x, 0, CameraManager.Instance.cameraMovement.GetCameraMoveLimit().x);
-        position.z = Mathf.Clamp(position.z, -20, CameraManager.Instance.cameraMovement.GetCameraMoveLimit().y);
-        CameraManager.Instance.cameraMovement.cameraFollowObject.position = Vector3.Lerp(CameraManager.Instance.cameraMovement.cameraFollowObject.position, position, zoomSpeed);
-        transform.position = CameraManager.Instance.cameraMovement.cameraFollowObject.position;
-        CameraManager.Instance.cameraMovement.position = transform.position;
     }
 
     private float CameraUpdatedHeight()

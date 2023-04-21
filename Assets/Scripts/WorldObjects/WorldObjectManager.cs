@@ -9,7 +9,6 @@ using UnityEngine.Events;
 public class WorldObjectManager : MonoBehaviour
 {
     public static WorldObjectManager Instance;
-    Player chosenPlayer;
 
     [Header("Object prefabs")]
     [SerializeField] private GameObject cityPrefab;
@@ -185,4 +184,24 @@ public enum ResourceType{
 
 public enum CityBuildingStatus{
     NotBuilt, Built, Blocked
+}
+
+public enum BuildingType{
+    OneByOne,
+    TwoByOne, OneByTwo, TwoByTwo,
+    ThreeByOne, ThreeByTwo, ThreeByThree,
+    FiveByFive
+}
+
+public enum BuildingID{
+    // Basic buildings
+    VillageHall, TownHall, CityHall, Tavern, Prison, Fort, Citadel, Castle, Caravan, Shipyard,
+    // Bonus buildings
+    BonusBuilding_1, BonusBuilding_2, EquipementBuilding, RacialBuilding, GraalBuilding,
+    // Magic buildings
+    MagicHall_1, MagicHall_2, MagicHall_3, MagicHall_4, MagicHall_5, AdditionalMagic_1, AdditionalMagic_2,
+    // Unit Buildings
+    Tier1_1, Tier1_2, Tier2_1, Tier2_2, Tier3_1, Tier3_2, Tier4_1, Tier4_2,
+    // Conditional ID's
+    Tier_1, Tier_2, Tier_3, Tier_4
 }

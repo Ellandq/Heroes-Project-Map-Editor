@@ -23,10 +23,10 @@ public class TerrainShaperTool : MonoBehaviour
     [SerializeField] private Sprite buttonSprite_disabled;
 
     public void ActivateTerrainShaperTool(){
-        BrushHandler.Instance.onLeftMouseButtonPressed.AddListener(HeightenTerrainLevel);
-        BrushHandler.Instance.onRightMouseButtonPressed.AddListener(LowerTerrainLevel);
-        BrushHandler.Instance.onNoButtonPressesDetected.AddListener(ResetHeightLevel);
-        BrushHandler.Instance.onNoButtonPressesDetected.AddListener(TerrainManager.Instance.ResetSelectedGridCellList);
+        BrushHandler.Instance.onLeftMouseButtonAction += HeightenTerrainLevel;
+        BrushHandler.Instance.onRightMouseButtonAction += LowerTerrainLevel;
+        BrushHandler.Instance.onNoButtonPressesDetected += ResetHeightLevel;
+        BrushHandler.Instance.onNoButtonPressesDetected += TerrainManager.Instance.ResetSelectedGridCellList;
         UpdateBrushSize();
     }
 

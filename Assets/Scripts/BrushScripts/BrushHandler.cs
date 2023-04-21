@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,16 +9,16 @@ public class BrushHandler : MonoBehaviour
     public static BrushHandler Instance;
 
     [Header ("Events")]
-    public UnityEvent onLeftMouseButtonPressed;
-    public UnityEvent onRightMouseButtonPressed;
-    public UnityEvent onNoButtonPressesDetected;
+    public Action onLeftMouseButtonAction;
+    public Action onRightMouseButtonAction;
+    public Action onNoButtonPressesDetected;
 
     [Header ("Frame Update Information")]
     [SerializeField] private LayerMask layersToHit;
-    [SerializeField] private bool singlePressModeActivated;
-    [SerializeField] private bool actionTaken;
-    [SerializeField] private bool allowMultipleGridCellSelection;
     [SerializeField] private BrushMode currentBrushMode;
+    private bool singlePressModeActivated;
+    private bool actionTaken;
+    private bool allowMultipleGridCellSelection;
 
     [Header ("Current brush information")]
     [SerializeField] int brushSize;
@@ -37,6 +38,10 @@ public class BrushHandler : MonoBehaviour
     [SerializeField] private ForestTool forestTool;
     [SerializeField] private TerrainShaperTool terrainShaperTool;
     [SerializeField] private TerrainSlopeTool terrainSlopeTool;
+
+    [Header ("Selection status")]
+    private bool leftMouseButtonSelectionActivated;
+    private bool rightMouseButtonSelectionActivated;
     
     private void Awake (){
         Instance = this;
@@ -45,63 +50,71 @@ public class BrushHandler : MonoBehaviour
         actionTaken = true;
         allowToolUsage = true;
         brushSize = 1;
+
+        InputManager.Instance.mouseInput.onLeftMouseButton_Down += ChangeLeftMouseButtonSelectionStatus;
+        InputManager.Instance.mouseInput.onLeftMouseButton_Up += ChangeLeftMouseButtonSelectionStatus;
+        InputManager.Instance.mouseInput.onRightMouseButton_Down += ChangeRightMouseButtonSelectionStatus;
+        InputManager.Instance.mouseInput.onRightMouseButton_Up += ChangeRightMouseButtonSelectionStatus;
+
+        InputManager.Instance.worldObjectInteractionManager.onNewGridCellHoveredOver.AddListener(HighlightCells);
     }
 
     // Update is called once per frame
     private void Update(){
-        // Check whether the mouse is over UI
-        if (!allowToolUsage) return;
-        if (InputManager.Instance.mouseInput.IsMouseOverUI() == false){
-            // Check whether the current tool requires a single press or constant mouse state information
-            if (!singlePressModeActivated){
-                // If left mouse button is pressed
-                if (InputManager.Instance.mouseInput.mouseButtonPressed_0){
-                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                    RaycastHit hit;
-                    if (Physics.Raycast(ray, out hit, Mathf.Infinity, layersToHit)){
-                        actionTaken = true;
-                        onLeftMouseButtonPressed?.Invoke();
-                        if (allowMultipleGridCellSelection) gridSelectionActivated = true;
-                    }
-                // If left button is pressed
-                }else if (InputManager.Instance.mouseInput.mouseButtonPressed_1){
-                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                    RaycastHit hit;
-                    if (Physics.Raycast(ray, out hit, Mathf.Infinity, layersToHit)){
-                        actionTaken = true;
-                        onRightMouseButtonPressed?.Invoke();
-                        if (allowMultipleGridCellSelection) gridSelectionActivated = true;
-                    }
-                // If no buttons are pressed
-                }else{
-                    if (actionTaken){
-                        actionTaken = false;
-                        onNoButtonPressesDetected?.Invoke();
-                        if (allowMultipleGridCellSelection) gridSelectionActivated = false;
-                    }
-                }
-            }else{
+        if (InputManager.Instance.mouseInput.IsMouseOverUI() || !allowToolUsage) return;
 
-                if (Input.GetMouseButtonDown(0)){
-                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                    RaycastHit hit;
-                    if (Physics.Raycast(ray, out hit, Mathf.Infinity, layersToHit)){
-                        onLeftMouseButtonPressed?.Invoke();
-                    }
-                }else if (Input.GetMouseButtonDown(1)){
-                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                    RaycastHit hit;
-                    if (Physics.Raycast(ray, out hit, Mathf.Infinity, layersToHit)){
-                        onRightMouseButtonPressed?.Invoke();
-                    }
+        if (leftMouseButtonSelectionActivated) LeftMouseButtonInteraction();
+        else if  (rightMouseButtonSelectionActivated) RightMouseButtonInteraction();
+        else if (actionTaken){
+            actionTaken = false;
+            onNoButtonPressesDetected?.Invoke();
+        }
+
+        // Ray gridRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+        // RaycastHit gridHit;
+        // if (Physics.Raycast(gridRay, out gridHit, Mathf.Infinity, LayerMask.GetMask("GridCell"))){
+        //     if (currentPosition != gridHit.collider.gameObject.GetComponent<GridCell>().GetPosition()){
+        //         HighlightCells(gridHit.collider.gameObject.GetComponent<GridCell>().GetPosition());
+        //     }
+        // }
+    }
+
+    private void LeftMouseButtonInteraction (){
+        if (singlePressModeActivated){
+            if (!actionTaken){
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
+                if (Physics.Raycast(ray, out hit, Mathf.Infinity, layersToHit)){
+                    onLeftMouseButtonAction?.Invoke();
                 }
             }
-            Ray gridRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit gridHit;
-            if (Physics.Raycast(gridRay, out gridHit, Mathf.Infinity, LayerMask.GetMask("GridCell"))){
-                if (currentPosition != gridHit.collider.gameObject.GetComponent<GridCell>().GetPosition()){
-                    HighlightCells(gridHit.collider.gameObject.GetComponent<GridCell>().GetPosition());
+        }else{
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, layersToHit)){
+                actionTaken = true;
+                onLeftMouseButtonAction?.Invoke();
+                if (allowMultipleGridCellSelection) gridSelectionActivated = true;
+            }
+        }
+    }
+
+    private void RightMouseButtonInteraction (){
+        if (singlePressModeActivated){
+            if (!actionTaken){
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
+                if (Physics.Raycast(ray, out hit, Mathf.Infinity, layersToHit)){
+                    onRightMouseButtonAction?.Invoke();
                 }
+            }
+        }else{
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, layersToHit)){
+                actionTaken = true;
+                onRightMouseButtonAction?.Invoke();
+                if (allowMultipleGridCellSelection) gridSelectionActivated = true;
             }
         }
     }
@@ -110,8 +123,8 @@ public class BrushHandler : MonoBehaviour
         currentBrushMode = mode;
         switch (currentBrushMode){
             case BrushMode.SelectTool:
-                onLeftMouseButtonPressed.RemoveAllListeners();
-                onRightMouseButtonPressed.RemoveAllListeners();
+                onLeftMouseButtonAction = null;
+                onRightMouseButtonAction = null;
 
                 layersToHit = LayerMask.GetMask("WorldObjects");
                 singlePressModeActivated = true;
@@ -120,8 +133,8 @@ public class BrushHandler : MonoBehaviour
             break;
 
             case BrushMode.EraseTool:
-                onLeftMouseButtonPressed.RemoveAllListeners();
-                onRightMouseButtonPressed.RemoveAllListeners();
+                onLeftMouseButtonAction = null;
+                onRightMouseButtonAction = null;
 
                 layersToHit = LayerMask.GetMask("Terrain");
                 singlePressModeActivated = false;
@@ -130,8 +143,8 @@ public class BrushHandler : MonoBehaviour
             break;
 
             case BrushMode.TerrainTypeTool:
-                onLeftMouseButtonPressed.RemoveAllListeners();
-                onRightMouseButtonPressed.RemoveAllListeners();
+                onLeftMouseButtonAction = null;
+                onRightMouseButtonAction = null;
 
                 layersToHit = LayerMask.GetMask("Terrain");
                 singlePressModeActivated = false;
@@ -140,8 +153,8 @@ public class BrushHandler : MonoBehaviour
             break;
 
             case BrushMode.RoadTool:
-                onLeftMouseButtonPressed.RemoveAllListeners();
-                onRightMouseButtonPressed.RemoveAllListeners();
+                onLeftMouseButtonAction = null;
+                onRightMouseButtonAction = null;
 
                 layersToHit = LayerMask.GetMask("Terrain");
                 singlePressModeActivated = false;
@@ -150,8 +163,8 @@ public class BrushHandler : MonoBehaviour
             break;
 
             case BrushMode.WallTool:
-                onLeftMouseButtonPressed.RemoveAllListeners();
-                onRightMouseButtonPressed.RemoveAllListeners();
+                onLeftMouseButtonAction = null;
+                onRightMouseButtonAction = null;
 
                 layersToHit = LayerMask.GetMask("Terrain");
                 singlePressModeActivated = false;
@@ -160,8 +173,8 @@ public class BrushHandler : MonoBehaviour
             break;
 
             case BrushMode.ForestTool:
-                onLeftMouseButtonPressed.RemoveAllListeners();
-                onRightMouseButtonPressed.RemoveAllListeners();
+                onLeftMouseButtonAction = null;
+                onRightMouseButtonAction = null;
 
                 layersToHit = LayerMask.GetMask("Terrain");
                 singlePressModeActivated = false;
@@ -170,8 +183,8 @@ public class BrushHandler : MonoBehaviour
             break;  
 
             case BrushMode.TerrainShaperTool:
-                onLeftMouseButtonPressed.RemoveAllListeners();
-                onRightMouseButtonPressed.RemoveAllListeners();
+                onLeftMouseButtonAction = null;
+                onRightMouseButtonAction = null;
 
                 layersToHit = LayerMask.GetMask("GridCell");
                 singlePressModeActivated = false;
@@ -180,8 +193,8 @@ public class BrushHandler : MonoBehaviour
             break;
 
             case BrushMode.TerrainSlopeTool:
-                onLeftMouseButtonPressed.RemoveAllListeners();
-                onRightMouseButtonPressed.RemoveAllListeners();
+                onLeftMouseButtonAction = null;
+                onRightMouseButtonAction = null;
 
                 layersToHit = LayerMask.GetMask("GridCell");
                 singlePressModeActivated = false;
@@ -197,6 +210,14 @@ public class BrushHandler : MonoBehaviour
 
     public void AllowToolUsage (bool status){
         allowToolUsage = status;
+    }
+
+    public void ChangeLeftMouseButtonSelectionStatus (){
+        leftMouseButtonSelectionActivated = !leftMouseButtonSelectionActivated;
+    }
+
+    public void ChangeRightMouseButtonSelectionStatus (){
+        rightMouseButtonSelectionActivated = !rightMouseButtonSelectionActivated;
     }
 
     private void HighlightCells(Vector2Int position){
@@ -221,6 +242,7 @@ public class BrushHandler : MonoBehaviour
         currentSelectedCells = selectedCells;
     }
 
+    // getters
     public List<GridCell> GetCurrentSelectedGridCells(){
         return currentSelectedCells;
     }

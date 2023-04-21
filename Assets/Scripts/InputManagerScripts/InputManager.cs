@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 //==============================================
-// The main camera script
+// The main input script
 //==============================================
 
 public class InputManager : MonoBehaviour
@@ -12,7 +12,7 @@ public class InputManager : MonoBehaviour
     // Store a referance to all sub input scripts
 
     [SerializeField]
-    internal WorldObjectInteractionManager gridInteractionManager;
+    internal WorldObjectInteractionManager worldObjectInteractionManager;
 
     [SerializeField]
     internal MouseInput mouseInput;
@@ -20,7 +20,7 @@ public class InputManager : MonoBehaviour
     [SerializeField]
     internal KeyboardInput keyboardInput;
 
-    void Awake ()
+    private void Awake ()
     {
         Instance = this;
     }
