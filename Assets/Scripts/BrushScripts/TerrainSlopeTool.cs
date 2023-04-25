@@ -11,19 +11,14 @@ public class TerrainSlopeTool : MonoBehaviour
 
     public void ActivateTerrainSlopeTool(){
         BrushHandler.Instance.ChangeBrushSize(1);
-        BrushHandler.Instance.onLeftMouseButtonAction += UpdateGridCellSelection;
+        BrushHandler.Instance.onLeftMouseButtonAction += AttemptSlopeCreation;
         BrushHandler.Instance.onRightMouseButtonAction += AttemptSlopeRemoval;
-        BrushHandler.Instance.onNoButtonPressesDetected += AttemptSlopeCreation;
+        //BrushHandler.Instance.onNoButtonPressesDetected += AttemptSlopeCreation;
         selectedGridCells = new List<Vector2Int>();
     }
 
-    private void UpdateGridCellSelection (){
-        if (!selectedGridCells.Contains(BrushHandler.Instance.GetCurrentSelectedPosition())){
-            selectedGridCells.Add(BrushHandler.Instance.GetCurrentSelectedPosition());
-        }
-    }
-
     private void AttemptSlopeCreation (){
+        selectedGridCells = BrushHandler.Instance.GetCurrentSelectedGridCells();
         if (selectedGridCells == null || (selectedGridCells.Count != 3 && selectedGridCells.Count != 2)){
             selectedGridCells = new List<Vector2Int>();
         }else if (selectedGridCells.Count == 3){

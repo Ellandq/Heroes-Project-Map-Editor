@@ -29,8 +29,8 @@ public class EraseTool : MonoBehaviour
     }
 
     private void EraseObjects(){
-        foreach (GridCell cell in BrushHandler.Instance.GetCurrentSelectedGridCells()){
-            cell.DestroyOccupyingObject();
+        foreach (Vector2Int cellPosition in BrushHandler.Instance.GetCurrentSelectedGridCells()){
+            GameGrid.Instance.GetGridCellInformation(cellPosition).DestroyOccupyingObject();
         }
     }
 }

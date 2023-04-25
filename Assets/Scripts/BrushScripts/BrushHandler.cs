@@ -1,8 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 
 public class BrushHandler : MonoBehaviour
 {
@@ -25,9 +23,13 @@ public class BrushHandler : MonoBehaviour
     [SerializeField] private Color defaultColor;
     [SerializeField] private Color highlightColor;
     private Vector2Int currentPosition;
-    private List<GridCell> currentSelectedCells;
+    private List<Vector2Int> currentSelectedCells;
     private bool gridSelectionActivated;
     private bool allowToolUsage;
+    private bool checkHeightLevel;
+    private bool invalidUsage;
+    private float currentAdjustedHeightLevel;
+
 
     [Header ("Tool References")]
     [SerializeField] private SelectTool selectTool;
@@ -45,160 +47,154 @@ public class BrushHandler : MonoBehaviour
     
     private void Awake (){
         Instance = this;
-        currentSelectedCells = new List<GridCell>();
+        currentSelectedCells = new List<Vector2Int>();
         currentPosition = new Vector2Int(0, 0);
         actionTaken = true;
-        allowToolUsage = true;
+        allowToolUsage = false;
+        invalidUsage = false;
         brushSize = 1;
 
-        InputManager.Instance.mouseInput.onLeftMouseButton_Down += ChangeLeftMouseButtonSelectionStatus;
-        InputManager.Instance.mouseInput.onLeftMouseButton_Up += ChangeLeftMouseButtonSelectionStatus;
-        InputManager.Instance.mouseInput.onRightMouseButton_Down += ChangeRightMouseButtonSelectionStatus;
-        InputManager.Instance.mouseInput.onRightMouseButton_Up += ChangeRightMouseButtonSelectionStatus;
+        // Left mouse button interactions
+        InputManager.Instance.mouseInput.onLeftMouseButton_Down += LeftMouseButtonInteraction;
+        InputManager.Instance.mouseInput.onLeftMouseButton_Up += LeftMouseButtonInteraction;
 
+        // Right mouse button interactions
+        InputManager.Instance.mouseInput.onRightMouseButton_Down += RightMouseButtonInteraction;
+        InputManager.Instance.mouseInput.onRightMouseButton_Up += RightMouseButtonInteraction;
+
+        // Grid highlights
         InputManager.Instance.worldObjectInteractionManager.onNewGridCellHoveredOver.AddListener(HighlightCells);
     }
 
     // Update is called once per frame
     private void Update(){
-        if (InputManager.Instance.mouseInput.IsMouseOverUI() || !allowToolUsage) return;
-
-        if (leftMouseButtonSelectionActivated) LeftMouseButtonInteraction();
-        else if  (rightMouseButtonSelectionActivated) RightMouseButtonInteraction();
-        else if (actionTaken){
+        if (actionTaken){
             actionTaken = false;
             onNoButtonPressesDetected?.Invoke();
         }
-
-        // Ray gridRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-        // RaycastHit gridHit;
-        // if (Physics.Raycast(gridRay, out gridHit, Mathf.Infinity, LayerMask.GetMask("GridCell"))){
-        //     if (currentPosition != gridHit.collider.gameObject.GetComponent<GridCell>().GetPosition()){
-        //         HighlightCells(gridHit.collider.gameObject.GetComponent<GridCell>().GetPosition());
-        //     }
-        // }
     }
 
     private void LeftMouseButtonInteraction (){
+        if (!allowToolUsage || InputManager.Instance.mouseInput.IsMouseOverUI()){
+            invalidUsage = !invalidUsage;
+            return;
+        }
+        if (invalidUsage){
+            invalidUsage = false;
+            return;
+        }
         if (singlePressModeActivated){
             if (!actionTaken){
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hit;
-                if (Physics.Raycast(ray, out hit, Mathf.Infinity, layersToHit)){
-                    onLeftMouseButtonAction?.Invoke();
-                }
-            }
-        }else{
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit, Mathf.Infinity, layersToHit)){
+                UpdateCurrentAdjustedHeight();
                 actionTaken = true;
-                onLeftMouseButtonAction?.Invoke();
-                if (allowMultipleGridCellSelection) gridSelectionActivated = true;
+            }else{
+                onNoButtonPressesDetected?.Invoke();
             }
+        }else if (!gridSelectionActivated){
+            UpdateCurrentAdjustedHeight();
+            gridSelectionActivated = true;
+        }else{
+            gridSelectionActivated = false;
+            onLeftMouseButtonAction?.Invoke();
+            onNoButtonPressesDetected?.Invoke();
         }
     }
 
     private void RightMouseButtonInteraction (){
+        if (!allowToolUsage || InputManager.Instance.mouseInput.IsMouseOverUI()){
+            invalidUsage = !invalidUsage;
+            return;
+        }
+        if (invalidUsage){
+            invalidUsage = false;
+            return;
+        }
         if (singlePressModeActivated){
             if (!actionTaken){
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hit;
-                if (Physics.Raycast(ray, out hit, Mathf.Infinity, layersToHit)){
-                    onRightMouseButtonAction?.Invoke();
-                }
-            }
-        }else{
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit, Mathf.Infinity, layersToHit)){
-                actionTaken = true;
                 onRightMouseButtonAction?.Invoke();
-                if (allowMultipleGridCellSelection) gridSelectionActivated = true;
+                actionTaken = true;
+            }else{
+                onNoButtonPressesDetected?.Invoke();
             }
+        }else if (!gridSelectionActivated){
+            UpdateCurrentAdjustedHeight();
+            gridSelectionActivated = true;
+        }else{
+            gridSelectionActivated = false;
+            onRightMouseButtonAction?.Invoke();
+            onNoButtonPressesDetected?.Invoke();
         }
     }
 
     public void ChangeBrushMode (BrushMode mode){
+        onLeftMouseButtonAction = null;
+        onRightMouseButtonAction = null;
+        onNoButtonPressesDetected = null;
+        allowToolUsage = true;
+
         currentBrushMode = mode;
         switch (currentBrushMode){
             case BrushMode.SelectTool:
-                onLeftMouseButtonAction = null;
-                onRightMouseButtonAction = null;
-
                 layersToHit = LayerMask.GetMask("WorldObjects");
                 singlePressModeActivated = true;
                 allowMultipleGridCellSelection = false;
+                checkHeightLevel = false;
                 selectTool.ActivateSelectTool();
             break;
 
             case BrushMode.EraseTool:
-                onLeftMouseButtonAction = null;
-                onRightMouseButtonAction = null;
-
                 layersToHit = LayerMask.GetMask("Terrain");
                 singlePressModeActivated = false;
                 allowMultipleGridCellSelection = true;
+                checkHeightLevel = false;
                 // eraseTool.ActivateEraseTool();
             break;
 
             case BrushMode.TerrainTypeTool:
-                onLeftMouseButtonAction = null;
-                onRightMouseButtonAction = null;
-
                 layersToHit = LayerMask.GetMask("Terrain");
                 singlePressModeActivated = false;
                 allowMultipleGridCellSelection = true;
+                checkHeightLevel = false;
                 // terrainTypeTool.ActivateTerrainTypeTool();
             break;
 
             case BrushMode.RoadTool:
-                onLeftMouseButtonAction = null;
-                onRightMouseButtonAction = null;
-
                 layersToHit = LayerMask.GetMask("Terrain");
                 singlePressModeActivated = false;
                 allowMultipleGridCellSelection = true;
+                checkHeightLevel = false;
                 // eraseTool.ActivateEraseTool();
             break;
 
             case BrushMode.WallTool:
-                onLeftMouseButtonAction = null;
-                onRightMouseButtonAction = null;
-
                 layersToHit = LayerMask.GetMask("Terrain");
                 singlePressModeActivated = false;
                 allowMultipleGridCellSelection = false;
+                checkHeightLevel = false;
                 // eraseTool.ActivateEraseTool();
             break;
 
             case BrushMode.ForestTool:
-                onLeftMouseButtonAction = null;
-                onRightMouseButtonAction = null;
-
                 layersToHit = LayerMask.GetMask("Terrain");
                 singlePressModeActivated = false;
                 allowMultipleGridCellSelection = false;
+                checkHeightLevel = false;
                 // eraseTool.ActivateEraseTool();
             break;  
 
             case BrushMode.TerrainShaperTool:
-                onLeftMouseButtonAction = null;
-                onRightMouseButtonAction = null;
-
                 layersToHit = LayerMask.GetMask("GridCell");
                 singlePressModeActivated = false;
                 allowMultipleGridCellSelection = true;
+                checkHeightLevel = true;
                 terrainShaperTool.ActivateTerrainShaperTool();
             break;
 
             case BrushMode.TerrainSlopeTool:
-                onLeftMouseButtonAction = null;
-                onRightMouseButtonAction = null;
-
                 layersToHit = LayerMask.GetMask("GridCell");
                 singlePressModeActivated = false;
                 allowMultipleGridCellSelection = true;
+                checkHeightLevel = false;
                 terrainSlopeTool.ActivateTerrainSlopeTool();
             break;
         }
@@ -208,42 +204,65 @@ public class BrushHandler : MonoBehaviour
         brushSize = size;
     }
 
+    public void UpdateCurrentAdjustedHeight (){
+        currentAdjustedHeightLevel = terrainShaperTool.GetCurrentHeightLevel();
+    }
+
     public void AllowToolUsage (bool status){
         allowToolUsage = status;
     }
 
-    public void ChangeLeftMouseButtonSelectionStatus (){
-        leftMouseButtonSelectionActivated = !leftMouseButtonSelectionActivated;
-    }
-
-    public void ChangeRightMouseButtonSelectionStatus (){
-        rightMouseButtonSelectionActivated = !rightMouseButtonSelectionActivated;
-    }
-
     private void HighlightCells(Vector2Int position){
-        List<GridCell> selectedCells = GameGrid.Instance.GetGridCellList(position, brushSize);
+        List<Vector2Int> selectedCells = GameGrid.Instance.GetGridCellPositionList(position, brushSize);
 
-        // Iterate over the cells in previousSelectedCells
-        foreach (GridCell cell in currentSelectedCells) {
-            // Check if the cell exists in selectedCells
-            if (!selectedCells.Contains(cell)) {
-                cell.ChangeCellHighlight(defaultColor);
+        if (!gridSelectionActivated || !allowMultipleGridCellSelection){
+            // Iterate over the cells in previousSelectedCells
+            for (int i = currentSelectedCells.Count - 1; i >= 0; i--) {
+                Vector2Int cellPosition = currentSelectedCells[i];
+                // Check if the cell exists in selectedCells
+                bool found = false;
+                for (int j = 0; j < selectedCells.Count; j++) {
+                    if (selectedCells[j] == cellPosition) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    GameGrid.Instance.GetGridCellInformation(cellPosition).ChangeCellHighlight(defaultColor);
+                    currentSelectedCells.RemoveAt(i);
+                }
             }
         }
-
+        
         // Iterate over the cells in selectedCells
-        foreach (GridCell cell in selectedCells) {
+        for (int i = 0; i < selectedCells.Count; i++) {
             // Perform action on the cell
-            if (!currentSelectedCells.Contains(cell)) {
-                cell.ChangeCellHighlight(highlightColor);
+            Vector2Int cellPosition = selectedCells[i];
+            if (!currentSelectedCells.Contains(cellPosition)) {
+                if (checkHeightLevel && gridSelectionActivated){
+                    if (GameGrid.Instance.GetGridCellInformation(cellPosition).GetHeightLevel() == currentAdjustedHeightLevel){
+                        GameGrid.Instance.GetGridCellInformation(cellPosition).ChangeCellHighlight(highlightColor);
+                        currentSelectedCells.Add(cellPosition);
+                    }
+                }else{
+                    GameGrid.Instance.GetGridCellInformation(cellPosition).ChangeCellHighlight(highlightColor);
+                    currentSelectedCells.Add(cellPosition);
+                }
+                
             }
         }
         currentPosition = position;
-        currentSelectedCells = selectedCells;
+    }
+
+    private void ClearHighlight (){
+        foreach (Vector2Int cellPosition in currentSelectedCells){
+            GameGrid.Instance.GetGridCellInformation(cellPosition).ChangeCellHighlight(defaultColor);
+        }
+        HighlightCells(currentPosition);
     }
 
     // getters
-    public List<GridCell> GetCurrentSelectedGridCells(){
+    public List<Vector2Int> GetCurrentSelectedGridCells(){
         return currentSelectedCells;
     }
 

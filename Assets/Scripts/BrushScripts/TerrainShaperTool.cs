@@ -7,6 +7,10 @@ using TMPro;
 
 public class TerrainShaperTool : MonoBehaviour
 {
+    private Coroutine raiseTerrain;
+    private Coroutine lowerTerrain;
+    private bool terrainoModificationCompleted;
+
     [Header ("Brush Information")]
     [SerializeField] private int brushSize;
     [SerializeField] private float currentHeightLevel;
@@ -23,10 +27,10 @@ public class TerrainShaperTool : MonoBehaviour
     [SerializeField] private Sprite buttonSprite_disabled;
 
     public void ActivateTerrainShaperTool(){
+        terrainoModificationCompleted = true;
         BrushHandler.Instance.onLeftMouseButtonAction += HeightenTerrainLevel;
         BrushHandler.Instance.onRightMouseButtonAction += LowerTerrainLevel;
         BrushHandler.Instance.onNoButtonPressesDetected += ResetHeightLevel;
-        BrushHandler.Instance.onNoButtonPressesDetected += TerrainManager.Instance.ResetSelectedGridCellList;
         UpdateBrushSize();
     }
 
@@ -43,10 +47,10 @@ public class TerrainShaperTool : MonoBehaviour
     private void HeightenTerrainLevel (){
         if (!heightLevelAdjusted) UpdateCurrentAdjustedHeightLevel();
         if (currentHeightLevel < 4.5f){
-            foreach (GridCell cell in BrushHandler.Instance.GetCurrentSelectedGridCells()){
-                if (cell.GetHeightLevel() == currentHeightLevel){
-                    TerrainManager.Instance.RaiseGridTerrainLevel(cell.GetPosition(), Mathf.FloorToInt(currentHeightLevel) + 1, allowTallClifs);
-                }
+            if (terrainoModificationCompleted){
+                raiseTerrain = null;
+                terrainoModificationCompleted = false;
+                raiseTerrain = StartCoroutine(RaiseTerrain(new List<Vector2Int>(BrushHandler.Instance.GetCurrentSelectedGridCells())));
             }
         } 
     }
@@ -54,10 +58,10 @@ public class TerrainShaperTool : MonoBehaviour
     private void LowerTerrainLevel (){
         if (!heightLevelAdjusted) UpdateCurrentAdjustedHeightLevel();
         if (currentHeightLevel > 1.5f){
-            foreach (GridCell cell in BrushHandler.Instance.GetCurrentSelectedGridCells()){
-                if (cell.GetHeightLevel() == currentHeightLevel){
-                    TerrainManager.Instance.LowerGridTerrainLevel(cell.GetPosition(), Mathf.FloorToInt(currentHeightLevel) - 1, allowTallClifs);
-                }
+            if (terrainoModificationCompleted){
+                raiseTerrain = null;
+                terrainoModificationCompleted = false;
+                lowerTerrain = StartCoroutine(LowerTerrain(new List<Vector2Int>(BrushHandler.Instance.GetCurrentSelectedGridCells())));
             }
         } 
     }
@@ -80,5 +84,30 @@ public class TerrainShaperTool : MonoBehaviour
             allowTallClifs = true;
             allowTallClifs_Button.image.sprite = buttonSprite_enabled;
         }
+    }
+
+    public float GetCurrentHeightLevel (){
+        UpdateCurrentAdjustedHeightLevel();
+        return Mathf.FloorToInt(currentHeightLevel);
+    }
+
+    public IEnumerator RaiseTerrain (List<Vector2Int> _gridCellList){
+        List<Vector2Int> gridCellList = new List<Vector2Int> (_gridCellList);
+        for (int i = 0; i < gridCellList.Count; i++){
+            TerrainManager.Instance.RaiseGridTerrainLevel(gridCellList[i], Mathf.FloorToInt(currentHeightLevel) + 1, allowTallClifs);
+            yield return null;
+        }
+        terrainoModificationCompleted = true;
+        yield break;
+    }
+
+    public IEnumerator LowerTerrain (List<Vector2Int> _gridCellList){
+        List<Vector2Int> gridCellList = new List<Vector2Int> (_gridCellList);
+        for (int i = 0; i < gridCellList.Count; i++){
+            TerrainManager.Instance.LowerGridTerrainLevel(gridCellList[i], Mathf.FloorToInt(currentHeightLevel) - 1, allowTallClifs);
+            yield return null;
+        }
+        terrainoModificationCompleted = true;
+        yield break;
     }
 }

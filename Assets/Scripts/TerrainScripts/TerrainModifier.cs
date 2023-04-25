@@ -1,10 +1,15 @@
 using UnityEngine;
+using System.Threading.Tasks;
 
 public class TerrainModifier : MonoBehaviour
 {
     private float defaultHeight = 0.004f;
 
     private Terrain terrain;
+
+    private int cellSize;
+    private int gridWidth;
+    private int gridLength;
     
     private void Awake()
     {
@@ -13,64 +18,63 @@ public class TerrainModifier : MonoBehaviour
     }
 
     public void ChangeTerrainSize(int gridSize)
-    {
+    {  
         float terrainSize = gridSize * 5f;
         terrain.terrainData.size = new Vector3(terrainSize, terrain.terrainData.size.y, terrainSize);
+        cellSize = Mathf.CeilToInt(terrain.terrainData.heightmapResolution / (float)terrain.terrainData.size.x * 5);
+        gridWidth = GameGrid.Instance.GetGridWidth();
+        gridLength = GameGrid.Instance.GetGridLength();
     }
 
-
-    
     public void SetGridCellTerrain(Vector2Int gridCellPosition, float heightLevel)
     {
-        // Get the heightmap data for the terrain
-        float[,] heights = terrain.terrainData.GetHeights(0, 0, terrain.terrainData.heightmapResolution, terrain.terrainData.heightmapResolution);
-
-        // Calculate the size of a grid cell in the heightmap data
-        int cellSize = Mathf.CeilToInt(terrain.terrainData.heightmapResolution / (float)terrain.terrainData.size.x * 5);
-        int offsetY = Mathf.FloorToInt(gridCellPosition.x * (cellSize - ((float)terrain.terrainData.heightmapResolution / GameGrid.Instance.GetGridWidth())));
-        int offsetX = Mathf.FloorToInt(gridCellPosition.y * (cellSize - ((float)terrain.terrainData.heightmapResolution / GameGrid.Instance.GetGridLength())));
+        int resolution = terrain.terrainData.heightmapResolution;
+        float[,] heights = terrain.terrainData.GetHeights(0, 0, resolution, resolution);
         
-        // Calculate the new height of the terrain
+        int offsetY = Mathf.FloorToInt(gridCellPosition.x * (cellSize - ((float)resolution / gridWidth)));
+        int offsetX = Mathf.FloorToInt(gridCellPosition.y * (cellSize - ((float)resolution / gridLength)));
+        Debug.Log("Grid position x: " + gridCellPosition.x);
+        Debug.Log("Cell size: " + cellSize);
+        Debug.Log("Resolution: " + resolution);
+        Debug.Log("Grid size: " + gridWidth);
+        Debug.Log("Offset: " + offsetX);
+        
         int xStart = Mathf.FloorToInt(gridCellPosition.y * cellSize) - offsetX;
         int yStart = Mathf.FloorToInt(gridCellPosition.x * cellSize) - offsetY;
+        int xEnd = Mathf.Min(xStart + cellSize, resolution);
+        int yEnd = Mathf.Min(yStart + cellSize, resolution);
 
         float newHeight = 0;
-        if (xStart >= 0 && xStart < terrain.terrainData.heightmapResolution &&
-            yStart >= 0 && yStart < terrain.terrainData.heightmapResolution)
+        if (xStart >= 0 && xStart < resolution &&
+            yStart >= 0 && yStart < resolution)
         {
             newHeight = heightLevel * defaultHeight;
         }
 
-        // Ensure that the new height does not exceed the maximum height of the terrain
         newHeight = Mathf.Clamp(newHeight, 0, 1);
 
-        // Raise the terrain
-        for (int x = xStart; x < xStart + cellSize; x++)
+        Parallel.For(xStart, xEnd, x =>
         {
-            for (int y = yStart; y < yStart + cellSize; y++)
+            for (int y = yStart; y < yEnd; y++)
             {
-                if (x >= 0 && x < terrain.terrainData.heightmapResolution &&
-                    y >= 0 && y < terrain.terrainData.heightmapResolution)
-                {
-                    heights[x, y] = newHeight;
-                }
+                heights[x, y] = newHeight;
             }
-        }
+        });
 
-        // Apply the changes to the terrain
         terrain.terrainData.SetHeights(0, 0, heights);
     }
 
     public void CreateSlope(Vector2Int gridCellPosition, float middleHeight, SlopeType slopeType)
     {
         if (slopeType == SlopeType.None) return;
+
         // Get the heightmap data for the terrain
-        float[,] heights = terrain.terrainData.GetHeights(0, 0, terrain.terrainData.heightmapResolution, terrain.terrainData.heightmapResolution);
+        int resolution = terrain.terrainData.heightmapResolution;
+        float[,] heights = terrain.terrainData.GetHeights(0, 0, resolution, resolution);
 
         // Calculate the size of a grid cell in the heightmap data
-        int cellSize = Mathf.CeilToInt(terrain.terrainData.heightmapResolution / (float)terrain.terrainData.size.x * 5);
-        int offsetY = Mathf.FloorToInt(gridCellPosition.x * (cellSize - ((float)terrain.terrainData.heightmapResolution / GameGrid.Instance.GetGridWidth())));
-        int offsetX = Mathf.FloorToInt(gridCellPosition.y * (cellSize - ((float)terrain.terrainData.heightmapResolution / GameGrid.Instance.GetGridLength())));
+        int offsetY = Mathf.FloorToInt(gridCellPosition.x * (cellSize - ((float)resolution / gridWidth)));
+        int offsetX = Mathf.FloorToInt(gridCellPosition.y * (cellSize - ((float)resolution / gridLength)));
 
         // Calculate the new height of the terrain
         int xStart = Mathf.FloorToInt(gridCellPosition.y * cellSize) - offsetX;
@@ -81,12 +85,12 @@ public class TerrainModifier : MonoBehaviour
         float maxHeight = Mathf.Min(1, middleHeightScaled + 0.5f * defaultHeight);
 
         // Apply the slope based on the selected SlopeType
-        for (int x = xStart; x < xStart + cellSize; x++)
+        Parallel.For(xStart, xStart + cellSize, x =>
         {
             for (int y = yStart; y < yStart + cellSize; y++)
             {
-                if (x >= 0 && x < terrain.terrainData.heightmapResolution &&
-                    y >= 0 && y < terrain.terrainData.heightmapResolution)
+                if (x >= 0 && x < resolution &&
+                    y >= 0 && y < resolution)
                 {
                     float slopeHeight = 0f;
 
@@ -109,7 +113,7 @@ public class TerrainModifier : MonoBehaviour
                     heights[x, y] = Mathf.Clamp(slopeHeight, 0, 1);
                 }
             }
-        }
+        });
 
         // Apply the changes to the terrain
         terrain.terrainData.SetHeights(0, 0, heights);
@@ -119,12 +123,13 @@ public class TerrainModifier : MonoBehaviour
     {
         if (slopeType == SlopeType.None) return;
         // Get the heightmap data for the terrain
-        float[,] heights = terrain.terrainData.GetHeights(0, 0, terrain.terrainData.heightmapResolution, terrain.terrainData.heightmapResolution);
+        int resolution = terrain.terrainData.heightmapResolution;
+        float[,] heights = terrain.terrainData.GetHeights(0, 0, resolution, resolution);
 
         // Calculate the size of a grid cell in the heightmap data
-        int cellSize = Mathf.CeilToInt(terrain.terrainData.heightmapResolution / (float)terrain.terrainData.size.x * 5);
-        int offsetY = Mathf.FloorToInt(gridCellPosition.x * (cellSize - ((float)terrain.terrainData.heightmapResolution / GameGrid.Instance.GetGridWidth())));
-        int offsetX = Mathf.FloorToInt(gridCellPosition.y * (cellSize - ((float)terrain.terrainData.heightmapResolution / GameGrid.Instance.GetGridLength())));
+        int cellSize = Mathf.CeilToInt(resolution / (float)terrain.terrainData.size.x * 5);
+        int offsetY = Mathf.FloorToInt(gridCellPosition.x * (cellSize - ((float)resolution / GameGrid.Instance.GetGridWidth())));
+        int offsetX = Mathf.FloorToInt(gridCellPosition.y * (cellSize - ((float)resolution / GameGrid.Instance.GetGridLength())));
 
         // Calculate the new height of the terrain
         int xStart = Mathf.FloorToInt(gridCellPosition.y * cellSize) - offsetX;
@@ -135,12 +140,12 @@ public class TerrainModifier : MonoBehaviour
         float maxHeight = Mathf.Min(1, middleHeightScaled + (defaultHeight / 2));
 
         // Apply the slope based on the selected SlopeType
-        for (int x = xStart; x < xStart + cellSize; x++)
+        Parallel.For(xStart, xStart + cellSize, x =>
         {
             for (int y = yStart; y < yStart + cellSize; y++)
             {
-                if (x >= 0 && x < terrain.terrainData.heightmapResolution &&
-                    y >= 0 && y < terrain.terrainData.heightmapResolution)
+                if (x >= 0 && x < resolution &&
+                    y >= 0 && y < resolution)
                 {
                     float slopeHeight = 0f;
 
@@ -163,13 +168,10 @@ public class TerrainModifier : MonoBehaviour
                     heights[x, y] = Mathf.Clamp(slopeHeight, 0, 1);
                 }
             }
-        }
+        });
         // Apply the changes to the terrain
         terrain.terrainData.SetHeights(0, 0, heights);
     }
-
-
-
 
     public void ResetTerrain()
     {

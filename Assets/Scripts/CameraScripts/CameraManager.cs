@@ -12,7 +12,6 @@ public class CameraManager : MonoBehaviour
     // Store a referance to all sub camera scripts
     [Header ("Camera script references")]
     [SerializeField] internal CameraMovement cameraMovement;
-    [SerializeField] internal CameraZoom cameraZoom;
 
     [Header ("Camera status")]
     [SerializeField] internal bool cameraEnabled;

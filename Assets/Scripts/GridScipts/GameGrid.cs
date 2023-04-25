@@ -167,6 +167,24 @@ public class GameGrid : MonoBehaviour
         return gridCells;
     }
 
+    public List<Vector2Int> GetGridCellPositionList(Vector2Int gridPosition, int size)
+    {
+        List<Vector2Int> gridCells = new List<Vector2Int>();
+        int offset = (size - 1) / 2;
+        for (int i = -offset; i <= offset; i++)
+        {
+            for (int j = -offset; j <= offset; j++)
+            {
+                Vector2Int currentPosition = gridPosition + new Vector2Int(i, j);
+                if (currentPosition.x >= 0 && currentPosition.y >= 0 && currentPosition.x < gameGrid.GetLength(0) && currentPosition.y < gameGrid.GetLength(1)){
+                    gridCells.Add(currentPosition);
+                }
+            }
+        }
+
+        return gridCells;
+    }
+
     // public List<GridCell> GetNeighbourCells (Vector2Int gridPosition){
 
     // }
