@@ -1,5 +1,6 @@
-using UnityEngine;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using UnityEngine;
 
 public class TerrainModifier : MonoBehaviour
 {
@@ -8,8 +9,7 @@ public class TerrainModifier : MonoBehaviour
     private Terrain terrain;
 
     private int cellSize;
-    private int gridWidth;
-    private int gridLength;
+    private int gridSize;
     
     private void Awake()
     {
@@ -22,44 +22,50 @@ public class TerrainModifier : MonoBehaviour
         float terrainSize = gridSize * 5f;
         terrain.terrainData.size = new Vector3(terrainSize, terrain.terrainData.size.y, terrainSize);
         cellSize = Mathf.CeilToInt(terrain.terrainData.heightmapResolution / (float)terrain.terrainData.size.x * 5);
-        gridWidth = GameGrid.Instance.GetGridWidth();
-        gridLength = GameGrid.Instance.GetGridLength();
+        gridSize = GameGrid.Instance.GetGridSize();
     }
 
-    public void SetGridCellTerrain(Vector2Int gridCellPosition, float heightLevel)
+    public void SetGridCellTerrain(List<Vector2Int> gridCellPosition, float heightLevel)
     {
         int resolution = terrain.terrainData.heightmapResolution;
         float[,] heights = terrain.terrainData.GetHeights(0, 0, resolution, resolution);
         
-        int offsetY = Mathf.FloorToInt(gridCellPosition.x * (cellSize - ((float)resolution / gridWidth)));
-        int offsetX = Mathf.FloorToInt(gridCellPosition.y * (cellSize - ((float)resolution / gridLength)));
-        Debug.Log("Grid position x: " + gridCellPosition.x);
-        Debug.Log("Cell size: " + cellSize);
-        Debug.Log("Resolution: " + resolution);
-        Debug.Log("Grid size: " + gridWidth);
-        Debug.Log("Offset: " + offsetX);
-        
-        int xStart = Mathf.FloorToInt(gridCellPosition.y * cellSize) - offsetX;
-        int yStart = Mathf.FloorToInt(gridCellPosition.x * cellSize) - offsetY;
-        int xEnd = Mathf.Min(xStart + cellSize, resolution);
-        int yEnd = Mathf.Min(yStart + cellSize, resolution);
-
-        float newHeight = 0;
-        if (xStart >= 0 && xStart < resolution &&
-            yStart >= 0 && yStart < resolution)
+        Parallel.For(0, gridCellPosition.Count, i =>
         {
-            newHeight = heightLevel * defaultHeight;
-        }
+            int offsetY = Mathf.FloorToInt(gridCellPosition[i].x * (cellSize - ((float)resolution / gridSize)));
+            int offsetX = Mathf.FloorToInt(gridCellPosition[i].y * (cellSize - ((float)resolution / gridSize)));
 
-        newHeight = Mathf.Clamp(newHeight, 0, 1);
+            int xStart = Mathf.FloorToInt(gridCellPosition[i].y * cellSize) - offsetX;
+            int yStart = Mathf.FloorToInt(gridCellPosition[i].x * cellSize) - offsetY;
+            int xEnd = Mathf.Min(xStart + cellSize, resolution);
+            int yEnd = Mathf.Min(yStart + cellSize, resolution);
 
-        Parallel.For(xStart, xEnd, x =>
-        {
-            for (int y = yStart; y < yEnd; y++)
+            float newHeight = 0;
+            if (xStart >= 0 && xStart < resolution &&
+                yStart >= 0 && yStart < resolution)
             {
-                heights[x, y] = newHeight;
+                newHeight = heightLevel * defaultHeight;
             }
+
+            newHeight = Mathf.Clamp(newHeight, 0, 1);
+            //float adjustedNewHeight;
+
+            for (int x = xStart; x < xEnd; x++)
+            {
+                for (int y = yStart; y < yEnd; y++)
+                {
+                    // adjustedNewHeight = newHeight + (heights[x, y] - originalHeight * defaultHeight);
+                    // heights[x, y] = Mathf.Clamp(adjustedNewHeight, heights[x, y] - defaultHeight, heights[x, y] + defaultHeight);
+                    heights[x, y] = newHeight;
+                }
+            }
+
         });
+
+        for (int i = 0; i < gridCellPosition.Count; i++){
+            GameGrid.Instance.GetGridCellInformation(gridCellPosition[i]).ChangeCellLevel(heightLevel);
+        }
+        
 
         terrain.terrainData.SetHeights(0, 0, heights);
     }
@@ -73,8 +79,8 @@ public class TerrainModifier : MonoBehaviour
         float[,] heights = terrain.terrainData.GetHeights(0, 0, resolution, resolution);
 
         // Calculate the size of a grid cell in the heightmap data
-        int offsetY = Mathf.FloorToInt(gridCellPosition.x * (cellSize - ((float)resolution / gridWidth)));
-        int offsetX = Mathf.FloorToInt(gridCellPosition.y * (cellSize - ((float)resolution / gridLength)));
+        int offsetY = Mathf.FloorToInt(gridCellPosition.x * (cellSize - ((float)resolution / gridSize)));
+        int offsetX = Mathf.FloorToInt(gridCellPosition.y * (cellSize - ((float)resolution / gridSize)));
 
         // Calculate the new height of the terrain
         int xStart = Mathf.FloorToInt(gridCellPosition.y * cellSize) - offsetX;
@@ -128,8 +134,8 @@ public class TerrainModifier : MonoBehaviour
 
         // Calculate the size of a grid cell in the heightmap data
         int cellSize = Mathf.CeilToInt(resolution / (float)terrain.terrainData.size.x * 5);
-        int offsetY = Mathf.FloorToInt(gridCellPosition.x * (cellSize - ((float)resolution / GameGrid.Instance.GetGridWidth())));
-        int offsetX = Mathf.FloorToInt(gridCellPosition.y * (cellSize - ((float)resolution / GameGrid.Instance.GetGridLength())));
+        int offsetY = Mathf.FloorToInt(gridCellPosition.x * (cellSize - ((float)resolution / GameGrid.Instance.GetGridSize())));
+        int offsetX = Mathf.FloorToInt(gridCellPosition.y * (cellSize - ((float)resolution / GameGrid.Instance.GetGridSize())));
 
         // Calculate the new height of the terrain
         int xStart = Mathf.FloorToInt(gridCellPosition.y * cellSize) - offsetX;

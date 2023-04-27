@@ -7,16 +7,17 @@ using TMPro;
 public class ObjectIcon : MonoBehaviour
 {
     [Header ("General Object Information")]
-    [SerializeField] private ObjectType objectType;
     [SerializeField] private Sprite objectSprite;
     [SerializeField] private string objectName;
     [SerializeField] private GameObject objectPrefab;
+    [SerializeField] private List<string> objectFilters;
 
     [Header ("UI references")]
     [SerializeField] private TMP_Text nameDisplay;
     [SerializeField] private Image objectImage;
 
     private void Awake (){
+        
         objectImage.sprite = objectSprite;
         nameDisplay.text = objectName;
     }

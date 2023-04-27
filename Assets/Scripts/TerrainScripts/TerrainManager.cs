@@ -26,27 +26,30 @@ public class TerrainManager : MonoBehaviour
         terrainModifier.ChangeTerrainSize(terrainSize);
     }
     
-    public void RaiseGridTerrainLevel (Vector2Int gridPosition, float heightLevel, bool allowTallClifs){
-        if ((!allowTallClifs && GameGrid.Instance.AreNeighboursHigherLevel(gridPosition, heightLevel - 1))
-            || GameGrid.Instance.GetGridCellInformation(gridPosition).IsSlopeEnterance()
-            || GameGrid.Instance.GetGridCellInformation(gridPosition).IsSlope())
-        {
-            return;
+    public void RaiseGridTerrainLevel (List<Vector2Int> gridPosition, float heightLevel, bool allowTallClifs){
+        for (int i = gridPosition.Count - 1; i >= 0; i--){
+            if ((!allowTallClifs && GameGrid.Instance.AreNeighboursHigherLevel(gridPosition[i], heightLevel - 1))
+            || GameGrid.Instance.GetGridCellInformation(gridPosition[i]).IsSlopeEnterance()
+            || GameGrid.Instance.GetGridCellInformation(gridPosition[i]).IsSlope())
+            {
+                gridPosition.RemoveAt(i);
+            }           
         }
-        // raise the terrain on given coordinates and update the corelated grid cell
-        GameGrid.Instance.GetGridCellInformation(gridPosition).ChangeCellLevel(heightLevel);
+        if (gridPosition.Count == 0) return; 
         terrainModifier.SetGridCellTerrain(gridPosition, heightLevel);
     }
 
-    public void LowerGridTerrainLevel (Vector2Int gridPosition, float heightLevel, bool allowTallClifs){
-        if ((!allowTallClifs && GameGrid.Instance.AreNeighboursLowerLevel(gridPosition, heightLevel + 1))
-            || GameGrid.Instance.GetGridCellInformation(gridPosition).IsSlopeEnterance()
-            || GameGrid.Instance.GetGridCellInformation(gridPosition).IsSlope())
-        {
-            return;
+    public void LowerGridTerrainLevel (List<Vector2Int> gridPosition, float heightLevel, bool allowTallClifs){
+        for (int i = gridPosition.Count - 1; i >= 0; i--){
+            if ((GameGrid.Instance.GetGridCellInformation(gridPosition[i]).GetHeightLevel() != heightLevel + 1f
+            || !allowTallClifs && GameGrid.Instance.AreNeighboursLowerLevel(gridPosition[i], heightLevel + 1))
+            || GameGrid.Instance.GetGridCellInformation(gridPosition[i]).IsSlopeEnterance()
+            || GameGrid.Instance.GetGridCellInformation(gridPosition[i]).IsSlope())
+            {
+                gridPosition.RemoveAt(i);
+            }     
         }
-        // lower the terrain on given coordinates and update the corelated grid cell
-        GameGrid.Instance.GetGridCellInformation(gridPosition).ChangeCellLevel(heightLevel);
+        if (gridPosition.Count == 0) return; 
         terrainModifier.SetGridCellTerrain(gridPosition, heightLevel);
     }
 
@@ -80,7 +83,9 @@ public class TerrainManager : MonoBehaviour
         }
     }
 
+    // Slope creation for diagonal slopes
     public void CreateSlope (Vector2Int gridPosition_01, Vector2Int gridPosition_02){
+        if (GameGrid.Instance.GetGridCellInformation(gridPosition_01).GetHeightLevel() != GameGrid.Instance.GetGridCellInformation(gridPosition_02).GetHeightLevel() - 0.5f) return;
         if (GameGrid.Instance.GetGridCellInformation(gridPosition_01).IsSlope() ^ GameGrid.Instance.GetGridCellInformation(gridPosition_02).IsSlope()){
             if (((gridPosition_01.x == gridPosition_02.x) && (gridPosition_01.y == gridPosition_02.y - 1))
             ||  ((gridPosition_01.x == gridPosition_02.x) && (gridPosition_01.y == gridPosition_02.y + 1))
@@ -106,7 +111,7 @@ public class TerrainManager : MonoBehaviour
     public void RemoveSlope (Vector2Int gridPosition){
         if (GameGrid.Instance.GetGridCellInformation(gridPosition).IsSlopeEnterance()) return;
         GameGrid.Instance.GetGridCellInformation(gridPosition).ChangeSlopeStatus();
-        LowerGridTerrainLevel(gridPosition, GameGrid.Instance.GetGridCellInformation(gridPosition).GetHeightLevel() - 0.5f, true);
+        terrainModifier.SetGridCellTerrain(new List<Vector2Int>(){gridPosition}, GameGrid.Instance.GetGridCellInformation(gridPosition).GetHeightLevel() - 0.5f);
     }
 
     public SlopeType GetSlopeType(Vector2Int higherPosition, Vector2Int lowerPosition)

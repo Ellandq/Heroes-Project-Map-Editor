@@ -4,13 +4,17 @@ using UnityEngine;
 
 public class GameGrid : MonoBehaviour
 {
+    // Static instance of this script
     public static GameGrid Instance;
-    public float gridSpaceSize = 5f;
-    private int gridSize;
 
+    [Header ("Grid Information")]
+    private GameObject[,] gameGrid;
+    private int gridSize;
+    private bool gridCreated;
+
+    [Header ("Grid Cell Information")]
     [SerializeField] private GameObject gridCellPrefab;
-    public GameObject[,] gameGrid;
-    public bool gridCreated;
+    public const float gridCellSize = 5f;
 
     void Start ()
     {
@@ -37,7 +41,7 @@ public class GameGrid : MonoBehaviour
                 for (int x = 0; x < gridSize; x++)
                 {
                     // Create a new GridSpace object for each cell
-                    gameGrid[x, z] = Instantiate(gridCellPrefab, new Vector3(x * gridSpaceSize, 0.1f, z * gridSpaceSize), Quaternion.identity);
+                    gameGrid[x, z] = Instantiate(gridCellPrefab, new Vector3(x * gridCellSize, 0.1f, z * gridCellSize), Quaternion.identity);
                     gameGrid[x, z].GetComponent<GridCell>().SetPosition(x, z, 1);
                     gameGrid[x, z].transform.parent = transform;
                     gameGrid[x, z].gameObject.name = "Grid Space ( X: " + x.ToString() + " , Z: " + z.ToString() + ")";
@@ -52,8 +56,8 @@ public class GameGrid : MonoBehaviour
     // Gets the grid position from world position
     public Vector2Int GetGridPosFromWorld(Vector3 worldPosition)
     {
-        int x = Mathf.FloorToInt(worldPosition.x / gridSpaceSize);
-        int z = Mathf.FloorToInt(worldPosition.z / gridSpaceSize);
+        int x = Mathf.FloorToInt(worldPosition.x / gridCellSize);
+        int z = Mathf.FloorToInt(worldPosition.z / gridCellSize);
 
         x = Mathf.Clamp(x, 0, gridSize);
         z = Mathf.Clamp(z, 0, gridSize);
@@ -64,8 +68,8 @@ public class GameGrid : MonoBehaviour
     // Gets the world position of a grid position
     public Vector3 GetWorldPosFromGridPos(Vector2Int gridPos)
     {
-        float x = gridPos.x * gridSpaceSize;
-        float z = gridPos.y * gridSpaceSize;
+        float x = gridPos.x * gridCellSize;
+        float z = gridPos.y * gridCellSize;
 
         return new Vector3(x, 0, z);
     }
@@ -76,14 +80,8 @@ public class GameGrid : MonoBehaviour
         return gameGrid[_gridPos.x, _gridPos.y].gameObject.GetComponent<GridCell>();    //Grid Space ( X: 0 , Z: 0)
     }
     
-    // Returns the length of the grid
-    public int GetGridLength ()
-    {
-        return gridSize;
-    }
-    
-    // Returns the width of the grid
-    public int GetGridWidth ()
+    // Returns the size of the grid
+    public int GetGridSize ()
     {
         return gridSize;
     }
