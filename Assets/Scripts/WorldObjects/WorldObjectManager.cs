@@ -66,6 +66,34 @@ public class WorldObjectManager : MonoBehaviour
         }
     }
 
+    public void CreateObject (GameObject objectPrefab, Vector2Int gridPosition){
+        switch (objectPrefab.GetComponent<WorldObject>().GetObjectType()){
+            case ObjectType.City:
+                InitialCitySetup(gridPosition, objectPrefab.GetComponent<City>().GetCityFraction());
+            break;
+
+            case ObjectType.Army:
+                InitialArmySetup(gridPosition);
+            break;
+
+            case ObjectType.Mine:
+                InitialMineSetup(gridPosition);
+            break;
+
+            case ObjectType.Dwelling:
+                InitialDwellingSetup(gridPosition);
+            break;
+
+            case ObjectType.Building:
+                //InitialBuildingSetup(gridPosition);
+            break;
+
+            case ObjectType.Resource:
+                InitialResourceSetup(gridPosition);
+            break;
+        }
+    }
+
     #region Enviroment
     private void InitialEnviromentSetup ()
     {
@@ -74,9 +102,9 @@ public class WorldObjectManager : MonoBehaviour
     #endregion
 
     #region City
-    private void InitialCitySetup (Vector2Int gridPosition)
+    private void InitialCitySetup (Vector2Int gridPosition, CityFraction cityFraction = CityFraction.Random)
     {    
-        if (GameGrid.Instance.GetGridCellInformation(gridPosition).isOccupied){
+        if (GameGrid.Instance.GetGridCellInformation(gridPosition).IsOccupied()){
             Debug.Log("Objects overlapping");
             return;
         }
@@ -85,7 +113,7 @@ public class WorldObjectManager : MonoBehaviour
 
         cities.Add(Instantiate(cityPrefab, transform.position, Quaternion.identity));
         City city = cities[numberOfCities].GetComponent<City>();
-        city = new City (gridPosition, transform.localEulerAngles, CityFraction.Random, PlayerTag.None);
+        city.Initialize(gridPosition, transform.localEulerAngles, cityFraction, PlayerTag.None);
         cities[numberOfCities].transform.parent = transform;
         cities[numberOfCities].gameObject.name = "City " + (numberOfCities + 1);
     
@@ -103,14 +131,14 @@ public class WorldObjectManager : MonoBehaviour
     #region Mine
     private void InitialMineSetup (Vector2Int gridPosition)
     {       
-        if (GameGrid.Instance.GetGridCellInformation(gridPosition).isOccupied){
+        if (GameGrid.Instance.GetGridCellInformation(gridPosition).IsOccupied()){
             Debug.Log("Objects overlapping");
             return;
         }
 
         mines.Add(Instantiate(minePrefab, transform.position, Quaternion.identity));
         Mine mine = mines[numberOfMines].GetComponent<Mine>();
-        mine = new Mine(gridPosition, transform.localEulerAngles, PlayerTag.None, ResourceType.Gold);
+        mine.Initialize(gridPosition, transform.localEulerAngles, PlayerTag.None, ResourceType.Gold);
         mines[numberOfMines].transform.parent = transform;
         mines[numberOfMines].gameObject.name = "Mine : " + (numberOfMines + 1);     
 
@@ -128,7 +156,7 @@ public class WorldObjectManager : MonoBehaviour
     #region Army
     private void InitialArmySetup (Vector2Int gridPosition)
     {
-        if (GameGrid.Instance.GetGridCellInformation(gridPosition).isOccupied){
+        if (GameGrid.Instance.GetGridCellInformation(gridPosition).IsOccupied()){
             Debug.Log("Objects overlapping");
             return;
         }
@@ -137,7 +165,7 @@ public class WorldObjectManager : MonoBehaviour
 
         armies.Add(Instantiate(armyPrefab, objectPosition, Quaternion.identity));
         Army army = armies[numberOfArmies].GetComponent<Army>();
-        army = new Army(gridPosition, transform.localEulerAngles, PlayerTag.None);
+        army.Initialize(gridPosition, transform.localEulerAngles, PlayerTag.None);
         armies[numberOfArmies].transform.parent = transform;
         armies[numberOfArmies].gameObject.name = "Army " + (numberOfArmies + 1);
 
@@ -148,13 +176,13 @@ public class WorldObjectManager : MonoBehaviour
     #region Resources
     private void InitialResourceSetup (Vector2Int gridPosition)
     {
-        if (GameGrid.Instance.GetGridCellInformation(gridPosition).isOccupied){
+        if (GameGrid.Instance.GetGridCellInformation(gridPosition).IsOccupied()){
             Debug.Log("Objects overlapping");
             return;
         }
         resources.Add(Instantiate(resourcePrefab, transform.position, Quaternion.identity));
         ResourcesObject resourcesObject = resources[numberOfResources].GetComponent<ResourcesObject>();
-        resourcesObject = new ResourcesObject (gridPosition, transform.localEulerAngles, PlayerTag.None, ResourceType.Gold);
+        resourcesObject.Initialize(gridPosition, transform.localEulerAngles, PlayerTag.None, ResourceType.Gold);
         resources[numberOfResources].transform.parent = transform;
         resources[numberOfResources].gameObject.name = "Resource: " + (numberOfResources + 1);
 
@@ -168,6 +196,7 @@ public class WorldObjectManager : MonoBehaviour
 
     }
     #endregion
+
 }
 
 public enum CityFraction{
@@ -191,6 +220,10 @@ public enum BuildingType{
     TwoByOne, OneByTwo, TwoByTwo,
     ThreeByOne, ThreeByTwo, ThreeByThree,
     FiveByFive
+}
+
+public enum ObjectShapeType{
+    City, Mine_Type_01, Mine_Type_02
 }
 
 public enum BuildingID{

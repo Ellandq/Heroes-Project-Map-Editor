@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class Dwelling : WorldObject
 {
-    public Dwelling (Vector2Int gridPosition, Vector3 rotation, PlayerTag ownedByPlayer = PlayerTag.None, ObjectType objectType = ObjectType.Dwelling)
-        : base(gridPosition, rotation, objectType, ownedByPlayer)
+    public void Initialize (Vector2Int gridPosition, Vector3 rotation, PlayerTag ownedByPlayer = PlayerTag.None, ObjectType objectType = ObjectType.Dwelling)
     {
+        base.Initialize(gridPosition, rotation, objectType, ownedByPlayer);
         // Initialization
     }
 }

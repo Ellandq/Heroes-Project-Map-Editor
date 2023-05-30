@@ -1,50 +1,41 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraMovement : MonoBehaviour 
+public class CameraMovement : MonoBehaviour
 {
-    [Header ("Object References")]
+    [Header("Object References")]
     [SerializeField] private CameraManager cameraManager;
     [SerializeField] private Transform cameraFollowObject;
     [SerializeField] private Transform cameraRotationObject;
     [SerializeField] private GameObject objectToMoveTowards;
 
     [Header("Camera Movement Options")]
-    [SerializeField] private float minSpeed; // The camera's movement speed
+    [SerializeField] private float minSpeed;
     [SerializeField] private float currentSpeed;
-    [SerializeField] private float maxSpeed; // The camera's maximum movement speed
+    [SerializeField] private float maxSpeed;
     [SerializeField] private float acceleration = 0.1f;
     [SerializeField] private float deceleration = 0.2f;
 
-    [Header ("Camera Rotation Options")]
+    [Header("Camera Rotation Options")]
     [SerializeField] private float rotationSpeed;
     private bool isRotating;
 
-    [Header ("Camera Zoom Options")]
+    [Header("Camera Zoom Options")]
     [SerializeField] private float zoomSpeed;
-    private Vector3 initialPosition;
-    
-    [Header ("Camera Movement limits")]
+
+    [Header("Camera Movement Limits")]
     [SerializeField] private Vector2 cameraMoveLimit;
     [SerializeField] private Vector2 cameraVerticalMoveLimit;
 
-    [Header ("Camera Information")]
     private Vector3 position;
-    private Vector3 cameraOffset; 
-    private Vector3 adjustedMovementVector; 
+    private Vector3 rotation;
+    private Vector3 adjustedMovementVector;
     private Vector3 centerOfRotation;
-    private float zoomObjectRotation;
-    private float rotation;
     private bool centerCalculated;
     private bool isMovingLeft;
     private bool isMovingRight;
     private bool isMovingForward;
     private bool isMovingBackward;
-
-    private int screenWidth; // The width of the screen
-    private int screenHeight; // The height of the screen
 
     private void Awake()
     {
@@ -58,51 +49,48 @@ public class CameraMovement : MonoBehaviour
 
         InputManager.Instance.mouseInput.onScrollWheelMove_Up += ZoomIn;
         InputManager.Instance.mouseInput.onScrollWheelMove_Down += ZoomOut;
+
         position = transform.position;
-        initialPosition = position;
     }
 
-    private void Start () 
+    private void Start()
     {
-        // Set the screen width and height
-        screenWidth = Screen.width;
-        screenHeight = Screen.height;
         currentSpeed = minSpeed;
     }
-	
-    // Check what type of movement if any is supposed to run every frame
-    private void Update () 
+
+    private void Update()
     {
-        if (isRotating){
+        if (isRotating)
+        {
             cameraManager.DisableCameraMovement();
-            if (Cursor.lockState == CursorLockMode.None) Cursor.lockState = CursorLockMode.Locked;
+            Cursor.lockState = CursorLockMode.Locked;
             RotateCamera();
-        }else{
+        }
+        else
+        {
             centerCalculated = false;
             Cursor.lockState = CursorLockMode.None;
             cameraManager.EnableCameraMovement();
         }
-        if (cameraManager.cameraEnabled){
-            
-            if (cameraManager.cameraMovementEnabled){
-                if (isMovingLeft) MoveLeft();
-                if (isMovingRight) MoveRight();
-                if (isMovingBackward) MoveBackward();
-                if (isMovingForward) MoveForward();
-            }
+
+        if (cameraManager.cameraEnabled && cameraManager.cameraMovementEnabled)
+        {
+            adjustedMovementVector = CalculateMovementAngle();
+
+            if (isMovingLeft) MoveLeft();
+            if (isMovingRight) MoveRight();
+            if (isMovingForward) MoveForward();
+            if (isMovingBackward) MoveBackward();
+
+            CalculateCurrentSpeed();
+
             // Clamp the camera's position to the camera move limit
-            position.x = Mathf.Clamp(position.x, 0f, cameraMoveLimit.x);
-            position.z = Mathf.Clamp(position.z, -20f, cameraMoveLimit.y);
-            position.y = Mathf.Clamp(position.y, cameraVerticalMoveLimit.x, cameraVerticalMoveLimit.y);
+            ClampCameraPosition();
 
             // Update the camera's position, the object it's following, and its rotation
             transform.position = position;
             cameraFollowObject.transform.position = position;
-            rotation = transform.localEulerAngles.y;
-
-            adjustedMovementVector = CalculateMovementAngle();
-
-            CalculateCurrentSpeed();
+            rotation = transform.localEulerAngles;
         }
     }
 
@@ -119,70 +107,81 @@ public class CameraMovement : MonoBehaviour
         }
     }
 
-    // Manual Movement
-    private void ChangeMovementStatus_Left (){
+    #region Movement
+
+    private void ChangeMovementStatus_Left()
+    {
         isMovingLeft = !isMovingLeft;
     }
 
-    private void MoveLeft (){
-        cameraFollowObject.Translate(new Vector3(-adjustedMovementVector.x, 0, adjustedMovementVector.z) * currentSpeed * Time.deltaTime); // move on -X axis 
+    private void MoveLeft()
+    {
+        cameraFollowObject.Translate(new Vector3(-adjustedMovementVector.x, 0, adjustedMovementVector.z) * currentSpeed * Time.deltaTime);
         position = cameraFollowObject.position;
     }
 
-    private void ChangeMovementStatus_Right (){
+    private void ChangeMovementStatus_Right()
+    {
         isMovingRight = !isMovingRight;
     }
 
-    private void MoveRight (){
-        cameraFollowObject.Translate(new Vector3(adjustedMovementVector.x, 0, -adjustedMovementVector.z) * currentSpeed * Time.deltaTime); // move on +X axis
+    private void MoveRight()
+    {
+        cameraFollowObject.Translate(new Vector3(adjustedMovementVector.x, 0, -adjustedMovementVector.z) * currentSpeed * Time.deltaTime);
         position = cameraFollowObject.position;
     }
 
-    private void ChangeMovementStatus_Forward (){
+    private void ChangeMovementStatus_Forward()
+    {
         isMovingForward = !isMovingForward;
     }
 
-    private void MoveForward () {
-        cameraFollowObject.Translate(new Vector3(adjustedMovementVector.z, 0, adjustedMovementVector.x) * currentSpeed * Time.deltaTime); // move on +Z axis
+    private void MoveForward()
+    {
+        cameraFollowObject.Translate(new Vector3(adjustedMovementVector.z, 0, adjustedMovementVector.x) * currentSpeed * Time.deltaTime);
         position = cameraFollowObject.position;
     }
 
-    private void ChangeMovementStatus_Backward (){
+    private void ChangeMovementStatus_Backward()
+    {
         isMovingBackward = !isMovingBackward;
     }
 
-    private void MoveBackward (){
-        cameraFollowObject.Translate(new Vector3(-adjustedMovementVector.z, 0, -adjustedMovementVector.x) * currentSpeed * Time.deltaTime); // move on -Z axis
+    private void MoveBackward()
+    {
+        cameraFollowObject.Translate(new Vector3(-adjustedMovementVector.z, 0, -adjustedMovementVector.x) * currentSpeed * Time.deltaTime);
         position = cameraFollowObject.position;
     }
 
-    // Rotation
+    #endregion
 
-    private void RotateCamera ()
+    private void RotateCamera()
     {
-        Vector3 rotation = cameraRotationObject.transform.localEulerAngles;
-        float currentMousePosition = Input.GetAxis("Mouse X");
-
-        if (!centerCalculated){
+        if (!centerCalculated)
+        {
             centerOfRotation = CalculateCenterOfRotation();
             centerCalculated = true;
         }
-        
-        rotation.y += currentMousePosition;
-        cameraRotationObject.transform.localEulerAngles = rotation;
+
+        Quaternion targetRotation = Quaternion.Euler(transform.localEulerAngles.x, transform.localEulerAngles.y + Input.GetAxis("Mouse X"), transform.localEulerAngles.z);
         position = CalculateCameraOffsetIndependent() + centerOfRotation;
 
-        position.x = Mathf.Clamp(position.x, 0, GetCameraMoveLimit().x);
-        position.z = Mathf.Clamp(position.z, -20, GetCameraMoveLimit().y);
+        ClampCameraPosition();
+
         cameraFollowObject.position = Vector3.Lerp(cameraFollowObject.position, position, rotationSpeed);
-        position = cameraFollowObject.position;
+        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, rotationSpeed);
+
+        transform.position = cameraFollowObject.position;
+
+        position = transform.position;
+        rotation = transform.localEulerAngles;
     }
 
-    private void ChangeRotationStatus (){
+
+    private void ChangeRotationStatus()
+    {
         isRotating = !isRotating;
     }
-
-    // Zooming in and out
 
     private void ZoomIn()
     {
@@ -196,18 +195,24 @@ public class CameraMovement : MonoBehaviour
         position.y = Mathf.Clamp(position.y, cameraVerticalMoveLimit.x, cameraVerticalMoveLimit.y);
     }
 
-
-    public void CameraTeleportToWorldObject ()
+    public void CameraTeleportToWorldObject()
     {
-        cameraFollowObject.transform.position = (objectToMoveTowards.transform.position + CalculateCameraOffset());
+        cameraFollowObject.transform.position = objectToMoveTowards.transform.position + CalculateCameraOffset();
         position = cameraFollowObject.transform.position;
         transform.position = cameraFollowObject.transform.position;
     }
 
-    public void UpdateMovementBorder (int gridSize)
+    public void UpdateMovementBorder(int gridSize)
     {
-        cameraMoveLimit.x = (gridSize * 5);
-        cameraMoveLimit.y = ((gridSize * 5) - 20);
+        cameraMoveLimit.x = gridSize * 5;
+        cameraMoveLimit.y = gridSize * 5 - 20;
+    }
+
+    private void ClampCameraPosition()
+    {
+        position.x = Mathf.Clamp(position.x, 0f, cameraMoveLimit.x);
+        position.z = Mathf.Clamp(position.z, -20f, cameraMoveLimit.y);
+        position.y = Mathf.Clamp(position.y, cameraVerticalMoveLimit.x, cameraVerticalMoveLimit.y);
     }
 
     #region Offset Calculation
@@ -232,25 +237,23 @@ public class CameraMovement : MonoBehaviour
         return new Vector3(Convert.ToSingle(offsetDistance * x), transform.position.y, Convert.ToSingle(offsetDistance * y));
     }
 
-    // Calculates the Vector at which the camera is supposed to move forwards
-    public Vector3 CalculateMovementAngle ()
+    private Vector3 CalculateMovementAngle()
     {
-        double y = Math.Round(10000 * Math.Cos(transform.localEulerAngles.y * Math.PI / 180)) / 10000;
-        double x = Math.Round(10000 * Math.Sin(transform.localEulerAngles.y * Math.PI / 180)) / 10000;
-        return new Vector3(Convert.ToSingle(y), 0, Convert.ToSingle(x));
+        float angle = transform.localEulerAngles.y * Mathf.Deg2Rad;
+        float x = Mathf.Cos(angle);
+        float z = Mathf.Sin(angle);
+        return new Vector3(x, 0, z);
     }
 
-    // Returns the position around which the camera is supposed to rotate
-    public Vector3 CalculateCenterOfRotation()
+    private Vector3 CalculateCenterOfRotation()
     {
         return (transform.position - CalculateCameraOffsetIndependent());
     }
 
     #endregion
 
-    // Getters
-    public Vector2 GetCameraMoveLimit (){
-        return cameraMoveLimit;
+    private Vector2 GetCameraMoveLimit()
+    {
+        return new Vector2(cameraMoveLimit.x, cameraMoveLimit.y);
     }
 }
-

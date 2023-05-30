@@ -17,6 +17,9 @@ public class Player : MonoBehaviour
     private void Start ()
     {
         PlayerManager.Instance.GetPlayerColor(playerTag);
+        ownedArmies = new List<Army>();
+        ownedCities = new List<City>();
+        ownedMines = new List<Mine>();
     }
 
     // Adds a new army for the player
@@ -41,9 +44,10 @@ public class Player : MonoBehaviour
     // Removes a given city from the player
     public void RemoveCity (City cityToRemove)
     {    
+        if (cityToRemove == null || ownedCities.Count == 0) return;
         for (int i = 0; i < ownedCities.Count; i++){
-            if (ownedArmies[i].name == cityToRemove.name){
-                ownedArmies.RemoveAt(i);
+            if (ownedCities[i].name == cityToRemove.name){
+                ownedCities.RemoveAt(i);
             }
         }
     }

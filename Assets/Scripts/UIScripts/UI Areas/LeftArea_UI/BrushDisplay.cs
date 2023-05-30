@@ -56,7 +56,7 @@ public enum BrushMode{
 }
 
 public enum TerrainType{
-
+    Grass_Lush, Rock, Sand
 }
 
 public enum ForrestType{

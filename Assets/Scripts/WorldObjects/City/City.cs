@@ -15,9 +15,9 @@ public class City : WorldObject
     [Header ("City Buildings")]
     [SerializeField] public List<CityBuildingStatus> cityBuildings;
 
-    public City (Vector2Int gridPosition, Vector3 rotation, CityFraction cityFraction, PlayerTag ownedByPlayer = PlayerTag.None, ObjectType objectType = ObjectType.City)
-        : base(gridPosition, rotation, objectType, ownedByPlayer)
+    public void Initialize (Vector2Int gridPosition, Vector3 rotation, CityFraction cityFraction, PlayerTag ownedByPlayer = PlayerTag.None, ObjectType objectType = ObjectType.City)
     {
+        base.Initialize(gridPosition, rotation, objectType, ownedByPlayer);
         ChangeOwningPlayer(ownedByPlayer);
         ChangeCityFraction(cityFraction);
 
@@ -29,10 +29,12 @@ public class City : WorldObject
         for (int i = 0; i < 30; i++) cityBuildings.Add(0);
         cityBuildings[0] = CityBuildingStatus.Built;
         cityBuildings[4] = CityBuildingStatus.Built;
+
+        GameGrid.Instance.SetGridCellStatus(this.gameObject, ObjectShapeType.City, gridPosition);
     }
 
     public override void ChangeOwningPlayer (PlayerTag ownedByPlayer = PlayerTag.None){ 
-        PlayerManager.Instance.GetPlayer(ownedByPlayer).RemoveCity(this);
+        PlayerManager.Instance.GetPlayer(base.GetPlayerTag()).RemoveCity(this);
         base.ChangeOwningPlayer(ownedByPlayer);
         PlayerManager.Instance.GetPlayer(ownedByPlayer).AddCity(this);
         if (ownedByPlayer != PlayerTag.None){
@@ -75,5 +77,9 @@ public class City : WorldObject
         }
 
         return cityInfo;
+    }
+
+    public CityFraction GetCityFraction (){
+        return cityFraction;
     }
 }

@@ -7,9 +7,10 @@ public class ResourcesObject : WorldObject
     private ResourceType resourceType;
     private int resourceCount;
 
-    public ResourcesObject (Vector2Int gridPosition, Vector3 rotation, PlayerTag ownedByPlayer = PlayerTag.None, ResourceType resourceType = ResourceType.Gold, ObjectType objectType = ObjectType.Resource)
-        : base(gridPosition, rotation, objectType, ownedByPlayer)
+    public void Initialize (Vector2Int gridPosition, Vector3 rotation, PlayerTag ownedByPlayer = PlayerTag.None, 
+    ResourceType resourceType = ResourceType.Gold, ObjectType objectType = ObjectType.Resource)
     {
+        base.Initialize(gridPosition, rotation, objectType, ownedByPlayer);
         ChangeResourceType(resourceType);
     }
 

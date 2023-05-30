@@ -7,8 +7,6 @@ public class GridCell : MonoBehaviour
     [Header ("Position information")]
     private Vector3 worldPosition;
     private Vector2Int gridPosition;
-    private int posX;
-    private int posZ;
     private float heightLevel;
 
     [Header ("Slope information")]
@@ -21,17 +19,15 @@ public class GridCell : MonoBehaviour
     [SerializeField] private Material material;
 
     //Saves a referance to the agame object that gets placed on the cell
-    public GameObject objectInThisGridSpace = null;
+    private GameObject objectInThisGridSpace = null;
     
     // Saves if the grid space is occpied or not and what type of object it is
-    public bool isOccupied = false;
-    public bool isObjectInteractable = false;
+    private bool isOccupied = false;
+    private bool isObjectInteractable = false;
 
     // Set the position of this grid cell on the grid
     public void SetPosition(int x, int z, int y)
     {
-        posX = x;
-        posZ = z;
         gridPosition = new Vector2Int(x, z);
         worldPosition = transform.position;
         ChangeCellLevel(y);
@@ -39,9 +35,8 @@ public class GridCell : MonoBehaviour
 
     #region Getters
 
-    // Get the position of this grid space on the grid
     public Vector2Int GetPosition (){
-        return new Vector2Int(posX, posZ);
+        return gridPosition;
     }
 
     public float GetHeightLevel (){
@@ -55,6 +50,23 @@ public class GridCell : MonoBehaviour
     public bool IsSlopeEnterance (){
         return isSlopeEnterance;
     }
+
+    public bool IsOccupied(){
+        return isOccupied;
+    }
+
+    public bool IsValidForObjectPlacement (float height){
+        if (heightLevel != height) return false; 
+        return (!isSlope && !isSlopeEnterance && !isOccupied);
+    }
+
+    public bool IsValidForTerrainEdition (){
+        return (isSlope || isSlopeEnterance || isOccupied);
+    }
+
+    // public bool IsValidForSlopePlacement (float height){
+
+    // }
 
     public SlopeType GetSlopeType (){
         return slopeType;

@@ -13,9 +13,13 @@ public class WorldObjectInteractionManager : MonoBehaviour
     [Header ("Grid Cell Information")]
     [SerializeField] private Vector2Int gridPosition;
 
+    [Header ("Terrain Information")]
+    [SerializeField] private Vector3 worldPosition;
+
     [Header ("Events")]
     public UnityEvent<Vector2Int> onNewGridCellHoveredOver;
     public UnityEvent<WorldObject> onNewWorldObjectHoveredOver;
+    public UnityEvent<Vector3> onTerrainHit;
 
     private void Update (){
         if (InputManager.Instance.mouseInput.IsMouseOverUI()) return;
@@ -26,6 +30,9 @@ public class WorldObjectInteractionManager : MonoBehaviour
         }
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, LayerMask.GetMask("WorldObjects"))){
             ChangeSelectedObject(hit.collider.GetComponent<WorldObject>());
+        }
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity, LayerMask.GetMask("Terrain"))){
+            ChangeWorldPosition(hit.point);
         }else{
             if (currentObjectHoveredOver != null) RemoveSelectedObject();
         }
@@ -45,6 +52,12 @@ public class WorldObjectInteractionManager : MonoBehaviour
         if (position == gridPosition) return;
         gridPosition = position;
         onNewGridCellHoveredOver?.Invoke(gridPosition);
+    }
+
+    private void ChangeWorldPosition (Vector3 position){
+        if (position == worldPosition) return;
+        worldPosition = position;
+        onTerrainHit?.Invoke(worldPosition);
     }
 
     // Getters

@@ -8,9 +8,10 @@ public class TerrainManager : MonoBehaviour
     [SerializeField] private GameObject terrainPrefab;
 
     [Header ("Terrain Information")]
-    [SerializeField] private GameObject terrainObject;
-    [SerializeField] private TerrainModifier terrainModifier;
+    private GameObject terrainObject;
+    private TerrainModifier terrainModifier;
 
+    private Vector3 lastModifiedPosition;
     private int terrainSize;
 
     private void Awake (){
@@ -24,33 +25,39 @@ public class TerrainManager : MonoBehaviour
         terrainObject.transform.parent = transform;
         terrainModifier = terrainObject.GetComponent<TerrainModifier>();
         terrainModifier.ChangeTerrainSize(terrainSize);
+        lastModifiedPosition = new Vector3(0, 0, 0);
     }
     
+    #region Terrain Height Modifcation
+
+    public void ModifyTerrain (Vector3 worldPosition, float radius, int multiplier){
+        terrainModifier.ModifyTerrain(worldPosition, radius, multiplier);
+    } 
+
     public void RaiseGridTerrainLevel (List<Vector2Int> gridPosition, float heightLevel, bool allowTallClifs){
         for (int i = gridPosition.Count - 1; i >= 0; i--){
             if ((!allowTallClifs && GameGrid.Instance.AreNeighboursHigherLevel(gridPosition[i], heightLevel - 1))
-            || GameGrid.Instance.GetGridCellInformation(gridPosition[i]).IsSlopeEnterance()
-            || GameGrid.Instance.GetGridCellInformation(gridPosition[i]).IsSlope())
+            || GameGrid.Instance.GetGridCellInformation(gridPosition[i]).IsValidForTerrainEdition()
+            || GameGrid.Instance.GetGridCellInformation(gridPosition[i]).GetHeightLevel() == heightLevel)
             {
                 gridPosition.RemoveAt(i);
             }           
         }
         if (gridPosition.Count == 0) return; 
-        terrainModifier.SetGridCellTerrain(gridPosition, heightLevel);
+        terrainModifier.SetGridCellTerrain(gridPosition, heightLevel, 1f);
     }
 
     public void LowerGridTerrainLevel (List<Vector2Int> gridPosition, float heightLevel, bool allowTallClifs){
         for (int i = gridPosition.Count - 1; i >= 0; i--){
             if ((GameGrid.Instance.GetGridCellInformation(gridPosition[i]).GetHeightLevel() != heightLevel + 1f
             || !allowTallClifs && GameGrid.Instance.AreNeighboursLowerLevel(gridPosition[i], heightLevel + 1))
-            || GameGrid.Instance.GetGridCellInformation(gridPosition[i]).IsSlopeEnterance()
-            || GameGrid.Instance.GetGridCellInformation(gridPosition[i]).IsSlope())
+            || GameGrid.Instance.GetGridCellInformation(gridPosition[i]).IsValidForTerrainEdition())
             {
                 gridPosition.RemoveAt(i);
             }     
         }
         if (gridPosition.Count == 0) return; 
-        terrainModifier.SetGridCellTerrain(gridPosition, heightLevel);
+        terrainModifier.SetGridCellTerrain(gridPosition, heightLevel, -1f);
     }
 
     public void CreateSlope (List<Vector2Int> gridPositions){
@@ -60,8 +67,7 @@ public class TerrainManager : MonoBehaviour
             if (GameGrid.Instance.GetGridCellInformation(gridPositions[0]).GetHeightLevel() + 1 == GameGrid.Instance.GetGridCellInformation(gridPositions[2]).GetHeightLevel()){
                 // Check whether the higher gridCell is already a slope or the middle GridCell is a slope enterance
                 if (GameGrid.Instance.GetGridCellInformation(gridPositions[2]).GetHeightLevel() != Mathf.Floor(GameGrid.Instance.GetGridCellInformation(gridPositions[2]).GetHeightLevel()) 
-                    || GameGrid.Instance.GetGridCellInformation(gridPositions[1]).IsSlopeEnterance() 
-                    || GameGrid.Instance.GetGridCellInformation(gridPositions[1]).IsSlope()) {
+                    || GameGrid.Instance.GetGridCellInformation(gridPositions[1]).IsValidForTerrainEdition()) {
                     return;
                     }
                 // Create the slope
@@ -71,8 +77,7 @@ public class TerrainManager : MonoBehaviour
             }else if (GameGrid.Instance.GetGridCellInformation(gridPositions[0]).GetHeightLevel() == GameGrid.Instance.GetGridCellInformation(gridPositions[2]).GetHeightLevel() + 1){
                 // Check whether the higher gridCell is already a slope or the middle GridCell is a slope enterance
                 if (GameGrid.Instance.GetGridCellInformation(gridPositions[0]).GetHeightLevel() != Mathf.Floor(GameGrid.Instance.GetGridCellInformation(gridPositions[0]).GetHeightLevel()) 
-                    || GameGrid.Instance.GetGridCellInformation(gridPositions[1]).IsSlopeEnterance() 
-                    || GameGrid.Instance.GetGridCellInformation(gridPositions[1]).IsSlope()) {
+                    || GameGrid.Instance.GetGridCellInformation(gridPositions[1]).IsValidForTerrainEdition()) {
                     return;
                     }
                 // Create the slope
@@ -111,7 +116,7 @@ public class TerrainManager : MonoBehaviour
     public void RemoveSlope (Vector2Int gridPosition){
         if (GameGrid.Instance.GetGridCellInformation(gridPosition).IsSlopeEnterance()) return;
         GameGrid.Instance.GetGridCellInformation(gridPosition).ChangeSlopeStatus();
-        terrainModifier.SetGridCellTerrain(new List<Vector2Int>(){gridPosition}, GameGrid.Instance.GetGridCellInformation(gridPosition).GetHeightLevel() - 0.5f);
+        terrainModifier.RemoveSlope(gridPosition, GameGrid.Instance.GetGridCellInformation(gridPosition).GetHeightLevel() - 0.5f);
     }
 
     public SlopeType GetSlopeType(Vector2Int higherPosition, Vector2Int lowerPosition)
@@ -182,4 +187,17 @@ public class TerrainManager : MonoBehaviour
         return slopeType;
     }
 
+    #endregion
+
+    #region Terrain Type Modification
+
+    public void PaintTerrain (Vector3 worldPosition, float radius, TerrainType terrainType){
+        if (worldPosition == lastModifiedPosition) return;
+
+        terrainModifier.PaintTerrain(worldPosition, radius, terrainType);
+
+        lastModifiedPosition = worldPosition;
+    }
+
+    #endregion
 }

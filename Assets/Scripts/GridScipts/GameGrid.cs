@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -53,6 +54,10 @@ public class GameGrid : MonoBehaviour
         
     }
 
+    public void ChangeGridVisability (bool status){
+        this.gameObject.SetActive(status);
+    }
+
     // Gets the grid position from world position
     public Vector2Int GetGridPosFromWorld(Vector3 worldPosition)
     {
@@ -70,8 +75,7 @@ public class GameGrid : MonoBehaviour
     {
         float x = gridPos.x * gridCellSize;
         float z = gridPos.y * gridCellSize;
-
-        return new Vector3(x, 0, z);
+        return new Vector3(x, GetGridCellInformation(gridPos).GetHeightLevel() * 2.5f, z);
     }
     
     // Returns a selected GridCell
@@ -93,18 +97,18 @@ public class GameGrid : MonoBehaviour
 
         if (gridPosition.x - 1 >= 0){
             // Left
-            if (!GetGridCellInformation(new Vector2Int(gridPosition.x - 1, gridPosition.y)).isOccupied){
+            if (!GetGridCellInformation(new Vector2Int(gridPosition.x - 1, gridPosition.y)).IsOccupied()){
                 neighbourList.Add(GetGridCellInformation(new Vector2Int(gridPosition.x - 1, gridPosition.y)));
             }
             // Left Down
             if (gridPosition.y - 1 >= 0) {
-                if (!GetGridCellInformation(new Vector2Int(gridPosition.x - 1, gridPosition.y - 1)).isOccupied){
+                if (!GetGridCellInformation(new Vector2Int(gridPosition.x - 1, gridPosition.y - 1)).IsOccupied()){
                     neighbourList.Add(GetGridCellInformation(new Vector2Int(gridPosition.x - 1, gridPosition.y - 1)));
                 }
             }
             // Left Up
             if (gridPosition.y + 1 < gridSize) {
-                if (!GetGridCellInformation(new Vector2Int(gridPosition.x - 1, gridPosition.y + 1)).isOccupied){
+                if (!GetGridCellInformation(new Vector2Int(gridPosition.x - 1, gridPosition.y + 1)).IsOccupied()){
                     neighbourList.Add(GetGridCellInformation(new Vector2Int(gridPosition.x - 1, gridPosition.y + 1)));
                 }
             }
@@ -112,19 +116,19 @@ public class GameGrid : MonoBehaviour
         if (gridPosition.x + 1 < gridSize){
             // Right
             if (gridPosition.y - 1 >= 0) {
-                if (!GetGridCellInformation(new Vector2Int(gridPosition.x + 1, gridPosition.y)).isOccupied){ 
+                if (!GetGridCellInformation(new Vector2Int(gridPosition.x + 1, gridPosition.y)).IsOccupied()){ 
                     neighbourList.Add(GetGridCellInformation(new Vector2Int(gridPosition.x + 1, gridPosition.y)));
                 }
             }
             // Right Down
             if (gridPosition.y - 1 >= 0){ 
-                if (!GetGridCellInformation(new Vector2Int(gridPosition.x + 1, gridPosition.y - 1)).isOccupied){ 
+                if (!GetGridCellInformation(new Vector2Int(gridPosition.x + 1, gridPosition.y - 1)).IsOccupied()){ 
                 neighbourList.Add(GetGridCellInformation(new Vector2Int(gridPosition.x + 1, gridPosition.y - 1)));
                 }
             }
             // Right Up
                 if (gridPosition.y + 1 < gridSize) {
-                    if (!GetGridCellInformation(new Vector2Int(gridPosition.x + 1, gridPosition.y + 1)).isOccupied){
+                    if (!GetGridCellInformation(new Vector2Int(gridPosition.x + 1, gridPosition.y + 1)).IsOccupied()){
                     neighbourList.Add(GetGridCellInformation(new Vector2Int(gridPosition.x + 1, gridPosition.y + 1)));
                 }
             }
@@ -132,14 +136,14 @@ public class GameGrid : MonoBehaviour
         if (gridPosition.x - 1 >= 0){
             // Down
             if (gridPosition.y - 1 >= 0){
-                if (!GetGridCellInformation(new Vector2Int(gridPosition.x, gridPosition.y - 1)).isOccupied){
+                if (!GetGridCellInformation(new Vector2Int(gridPosition.x, gridPosition.y - 1)).IsOccupied()){
                     neighbourList.Add(GetGridCellInformation(new Vector2Int(gridPosition.x, gridPosition.y - 1)));
                 }
             }
             
             // Up
             if (gridPosition.y + 1 < gridSize) {
-                if (!GetGridCellInformation(new Vector2Int(gridPosition.x, gridPosition.y + 1)).isOccupied){
+                if (!GetGridCellInformation(new Vector2Int(gridPosition.x, gridPosition.y + 1)).IsOccupied()){
                     neighbourList.Add(GetGridCellInformation(new Vector2Int(gridPosition.x, gridPosition.y + 1)));
                 }
             }
@@ -183,13 +187,9 @@ public class GameGrid : MonoBehaviour
         return gridCells;
     }
 
-    // public List<GridCell> GetNeighbourCells (Vector2Int gridPosition){
-
-    // }
-
-    // public List<GridCell> GetNeighbourCells (Vector2Int gridPosition, int height){
-
-    // }
+    public bool IsPositionValidForObjectPlacement (Vector2Int gridPosition){
+        return true;
+    }
 
     public bool AreNeighboursHigherLevel (Vector2Int gridPosition, float height){
         List<GridCell> gridCells = new List<GridCell>();
@@ -223,5 +223,40 @@ public class GameGrid : MonoBehaviour
         }
 
         return false;
+    }
+
+    public List<List<sbyte>> GetShapeOffset(ObjectShapeType shapeType)
+    {
+        List<List<sbyte>> shapeOffset = new List<List<sbyte>>();
+
+        switch (shapeType)
+        {
+            case ObjectShapeType.City:
+                for (sbyte i = -5; i < 6; i++)
+                {
+                    for (sbyte j = -5; j < 6; j++)
+                    {
+                        if ((Math.Abs(i) + Math.Abs(j)) <= 6 || (Math.Abs(i) == 3 && Math.Abs(j) == 4) || (Math.Abs(i) == 4 && Math.Abs(j) == 3))
+                        {
+                            shapeOffset.Add(new List<sbyte> { i, j });
+                        }
+                    }
+                }
+                break;
+
+            // Add more cases for other shape types
+
+            default:
+                // Handle unknown shape types
+                break;
+        }
+
+        return shapeOffset;
+    }
+
+    public void SetGridCellStatus (GameObject occupyingObject, ObjectShapeType shapeType, Vector2Int gridPosition){
+        foreach (List<sbyte> position in GetShapeOffset(shapeType)){
+            GetGridCellInformation(new Vector2Int(position[0] + gridPosition.x, position[1] + gridPosition.y)).AddOccupyingObject(occupyingObject);  
+        }
     }
 }

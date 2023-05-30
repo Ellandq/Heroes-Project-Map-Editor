@@ -13,7 +13,7 @@ public class WorldObject : MonoBehaviour
     [SerializeField] private Vector3 rotation;
 
 
-    public WorldObject (Vector2Int gridPosition, Vector3 rotation, ObjectType objectType, PlayerTag ownedByPlayer = PlayerTag.None){
+    public void Initialize (Vector2Int gridPosition, Vector3 rotation, ObjectType objectType, PlayerTag ownedByPlayer = PlayerTag.None){
         this.objectType = objectType;
         UpdateObjectPosition(GameGrid.Instance.GetWorldPosFromGridPos(gridPosition));
         UpdateObjectRotation(rotation);

@@ -11,9 +11,9 @@ public class Army : WorldObject
     [SerializeField] private List<UnitSlot> unitSlots;
 
     // Initialization 
-    public Army(Vector2Int gridPosition, Vector3 rotation, PlayerTag ownedByPlayer = PlayerTag.None, ObjectType objectType = ObjectType.Army)
-        : base(gridPosition, rotation, objectType, ownedByPlayer)
+    public void Initialize (Vector2Int gridPosition, Vector3 rotation, PlayerTag ownedByPlayer = PlayerTag.None, ObjectType objectType = ObjectType.Army)
     {
+        base.Initialize(gridPosition, rotation, objectType, ownedByPlayer);
         ChangeOwningPlayer(ownedByPlayer);
         
         unitSlots = new List<UnitSlot>(7);

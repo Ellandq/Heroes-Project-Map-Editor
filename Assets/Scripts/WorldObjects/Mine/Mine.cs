@@ -11,9 +11,10 @@ public class Mine : WorldObject
     [Header("Mine Garrison references")]
     [SerializeField] private List<UnitSlot> unitSlots;
 
-    public Mine (Vector2Int gridPosition, Vector3 rotation, PlayerTag ownedByPlayer = PlayerTag.None, ResourceType resourceType = ResourceType.Gold, ObjectType objectType = ObjectType.Mine)
-        : base(gridPosition, rotation, objectType, ownedByPlayer)
+    public void Initialize (Vector2Int gridPosition, Vector3 rotation, PlayerTag ownedByPlayer = PlayerTag.None, 
+    ResourceType resourceType = ResourceType.Gold, ObjectType objectType = ObjectType.Mine)
     {
+        base.Initialize(gridPosition, rotation, objectType, ownedByPlayer);
         ChangeOwningPlayer(ownedByPlayer);
         ChangeMineType(mineType);
 
